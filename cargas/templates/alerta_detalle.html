@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+
+{% block title %}Alerta: {{ alerta.get_tipo_display }} - CargoTrack Pro{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Detalle de Alerta</h1>
+            <p class="page-subtitle">Información completa de la alerta</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'alertas_list' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Volver
+            </a>
+            {% if not alerta.atendida %}
+            <a href="{% url 'atender_alerta' alerta.id %}" class="btn btn-modern btn-success">
+                <i class="bi bi-check-circle"></i> Atender Alerta
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Columna Izquierda: Información de la Alerta -->
+    <div class="col-lg-5">
+        <!-- Card de Alerta -->
+        <div class="modern-card" data-aos="fade-up" style="border-left: 4px solid 
+            {% if alerta.nivel == 'critica' %}#ef4444
+            {% elif alerta.nivel == 'alta' %}#f59e0b
+            {% elif alerta.nivel == 'media' %}#3b82f6
+            {% else %}#10b981{% endif %};">
+            
+            <div class="text-center mb-4">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: 
+                    {% if alerta.nivel == 'critica' %}linear-gradient(135deg, #ef4444 0%, #dc2626 100%)
+                    {% elif alerta.nivel == 'alta' %}linear-gradient(135deg, #f59e0b 0%, #d97706 100%)
+                    {% elif alerta.nivel == 'media' %}linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)
+                    {% else %}linear-gradient(135deg, #10b981 0%, #059669 100%){% endif %};
+                    display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 8px 24px rgba(239, 68, 68, 0.3);">
+                    <i class="bi bi-exclamation-triangle-fill" style="font-size: 40px; color: white;"></i>
+                </div>
+                
+                <h4 style="font-weight: 700; color: #0f172a; margin-bottom: 8px;">
+                    {{ alerta.get_tipo_display }}
+                </h4>
+                
+                <span class="badge" style="background: 
+                    {% if alerta.nivel == 'critica' %}#ef4444
+                    {% elif alerta.nivel == 'alta' %}#f59e0b
+                    {% elif alerta.nivel == 'media' %}#3b82f6
+                    {% else %}#10b981{% endif %}; font-size: 14px; padding: 8px 16px;">
+                    {{ alerta.get_nivel_display }}
+                </span>
+            </div>
+            
+            <!-- Descripción -->
+            <div style="background: #f8fafc; padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                <label style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600; display: block; margin-bottom: 8px;">
+                    Descripción
+                </label>
+                <p style="margin: 0; color: #0f172a; font-size: 14px;">
+                    {{ alerta.descripcion|default:"Sin descripción" }}
+                </p>
+            </div>
+            
+            <!-- Información Temporal -->
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <label style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Fecha</label>
+                    <p style="font-size: 14px; color: #0f172a; margin: 4px 0;">
+                        <i class="bi bi-calendar text-primary"></i> {{ alerta.fecha|date:"d/m/Y" }}
+                    </p>
+                </div>
+                <div class="col-6">
+                    <label style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Hora</label>
+                    <p style="font-size: 14px; color: #0f172a; margin: 4px 0;">
+                        <i class="bi bi-clock text-primary"></i> {{ alerta.fecha|time:"H:i" }}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Estado -->
+            {% if alerta.atendida %}
+            <div style="padding: 16px; background: #d1fae5; border-radius: 12px; border: 1px solid #10b981;">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="bi bi-check-circle-fill" style="color: #10b981; font-size: 20px;"></i>
+                    <span style="font-weight: 600; font-size: 16px; color: #065f46;">Alerta Atendida</span>
+                </div>
+                <p style="font-size: 13px; color: #047857; margin: 0;">
+                    <strong>Atendida por:</strong> {{ alerta.atendida_por.nombre_completo }}<br>
+                    <strong>Fecha:</strong> {{ alerta.fecha_atencion|date:"d/m/Y H:i" }}
+                </p>
+                {% if alerta.notas_atencion %}
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #6ee7b7;">
+                    <strong style="font-size: 12px; color: #047857;">Notas:</strong>
+                    <p style="font-size: 13px; color: #065f46; margin: 4px 0 0 0;">{{ alerta.notas_atencion }}</p>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div style="padding: 16px; background: #fee2e2; border-radius: 12px; border: 1px solid #ef4444;">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-fill" style="color: #ef4444; font-size: 20px;"></i>
+                    <span style="font-weight: 600; font-size: 16px; color: #991b1b;">Pendiente de Atención</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Columna Derecha: Información del Envío -->
+    <div class="col-lg-7">
+        <!-- Card del Envío -->
+        <div class="modern-card" data-aos="fade-up">
+            <h5 style="font-weight: 700; color: #0f172a; margin-bottom: 20px;">
+                <i class="bi bi-box-seam text-primary"></i> Información del Envío
+            </h5>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Número de Guía</label>
+                    <p style="font-size: 16px; color: #0f172a; margin: 4px 0; font-weight: 600;">
+                        {{ alerta.envio.numero_guia }}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <label style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Estado</label>
+                    <p style="margin: 4px 0;">
+                        {% if alerta.envio.estado == 'en_ruta' %}
+                            <span class="badge" style="background: #3b82f6;">En Ruta</span>
+                        {% elif alerta.envio.estado == 'entregado' %}
+                            <span class="badge" style="background: #10b981;">Entregado</span>
+                        {% elif alerta.envio.estado == 'pendiente' %}
+                            <span class="badge" style="background: #f59e0b;">Pendiente</span>
+                        {% else %}
+                            <span class="badge" style="background: #64748b;">{{ alerta.envio.get_estado_display }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Cliente</label>
+                    <p style="font-size: 14px; color: #0f172a; margin: 4px 0;">
+                        <i class="bi bi-person text-primary"></i> {{ alerta.envio.cliente.nombre_completo }}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <label style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Vehículo</label>
+                    <p style="font-size: 14px; color: #0f172a; margin: 4px 0;">
+                        <i class="bi bi-truck text-primary"></i> {{ alerta.envio.vehiculo.placa }}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Origen</label>
+                    <p style="font-size: 14px; color: #0f172a; margin: 4px 0;">
+                        <i class="bi bi-geo-alt text-success"></i> {{ alerta.envio.origen|truncatewords:5 }}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <label style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 600;">Destino</label>
+                    <p style="font-size: 14px; color: #0f172a; margin: 4px 0;">
+                        <i class="bi bi-geo-alt-fill text-danger"></i> {{ alerta.envio.destino|truncatewords:5 }}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <a href="{% url 'envio_detalle' alerta.envio.id %}" class="btn btn-outline-primary flex-fill">
+                    <i class="bi bi-eye"></i> Ver Envío Completo
+                </a>
+                <a href="{% url 'rastrear_envio' alerta.envio.id %}" class="btn btn-outline-info flex-fill">
+                    <i class="bi bi-geo-alt"></i> Rastrear en Mapa
+                </a>
+            </div>
+        </div>
+        
+        <!-- Eventos Recientes -->
+        <div class="modern-card" data-aos="fade-up" data-aos-delay="100">
+            <h5 style="font-weight: 700; color: #0f172a; margin-bottom: 20px;">
+                <i class="bi bi-clock-history text-primary"></i> Eventos Recientes
+            </h5>
+            
+            {% if eventos %}
+                <div class="timeline">
+                    {% for evento in eventos %}
+                    <div class="timeline-item" style="padding-left: 32px; position: relative; padding-bottom: 20px; border-left: 2px solid #e2e8f0; margin-left: 8px;">
+                        <div style="position: absolute; left: -9px; top: 0; width: 16px; height: 16px; border-radius: 50%; background: #3b82f6; border: 3px solid white;"></div>
+                        <div style="font-size: 12px; color: #64748b; margin-bottom: 4px;">
+                            {{ evento.fecha|date:"d/m/Y H:i" }}
+                        </div>
+                        <div style="font-weight: 600; color: #0f172a; font-size: 14px;">
+                            {{ evento.ubicacion }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center" style="padding: 32px;">
+                    <i class="bi bi-inbox" style="font-size: 48px; color: #cbd5e1;"></i>
+                    <p style="color: #64748b; margin-top: 12px;">No hay eventos registrados</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

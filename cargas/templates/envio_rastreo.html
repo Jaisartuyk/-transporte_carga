@@ -1,0 +1,781 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Rastreo de Envío {{ envio.numero_guia }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .tracking-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 32px;
+        color: white;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        margin-bottom: 24px;
+    }
+    
+    .tracking-title {
+        font-size: 28px;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+    
+    .tracking-subtitle {
+        font-size: 16px;
+        opacity: 0.9;
+    }
+    
+    .info-card {
+        background: white;
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        margin-bottom: 20px;
+    }
+    
+    .info-card-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .info-row:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    
+    .info-value {
+        color: #0f172a;
+        font-size: 14px;
+        font-weight: 600;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+    
+    .status-en_ruta {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .status-entregado {
+        background: #dcfce7;
+        color: #166534;
+    }
+    
+    .status-pendiente {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .map-container {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        height: 600px;
+        margin-bottom: 24px;
+    }
+    
+    #map {
+        width: 100%;
+        height: 100%;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        border-radius: 16px;
+        padding: 20px;
+        color: white;
+    }
+    
+    .stat-card.blue {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+    
+    .stat-card.green {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+    
+    .stat-card.purple {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    
+    .stat-label {
+        font-size: 12px;
+        opacity: 0.9;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+    
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+    }
+    
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, #667eea, #764ba2);
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 24px;
+        padding-left: 20px;
+    }
+    
+    .timeline-dot {
+        position: absolute;
+        left: -22px;
+        top: 4px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #667eea;
+        border: 3px solid white;
+        box-shadow: 0 0 0 2px #667eea;
+    }
+    
+    .timeline-content {
+        background: #f8fafc;
+        padding: 16px;
+        border-radius: 12px;
+    }
+    
+    .timeline-date {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 4px;
+    }
+    
+    .timeline-text {
+        font-size: 14px;
+        color: #1e293b;
+    }
+    
+    .no-data-message {
+        text-align: center;
+        padding: 60px 20px;
+        color: #64748b;
+    }
+    
+    .no-data-icon {
+        font-size: 64px;
+        color: #cbd5e1;
+        margin-bottom: 16px;
+    }
+    
+    .alert-info-custom {
+        background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+        border: none;
+        border-radius: 16px;
+        padding: 20px;
+        color: #1e40af;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Header del Rastreo -->
+<div class="tracking-header" data-aos="fade-down">
+    <div class="d-flex justify-content-between align-items-start">
+        <div>
+            <div class="tracking-title">
+                <i class="bi bi-geo-alt-fill"></i> Rastreo en Tiempo Real
+            </div>
+            <div class="tracking-subtitle">
+                Envío {{ envio.numero_guia }} • {{ envio.get_estado_display }}
+            </div>
+        </div>
+        <span class="status-badge status-{{ envio.estado }}">
+            <i class="bi bi-circle-fill" style="font-size: 8px;"></i>
+            {{ envio.get_estado_display }}
+        </span>
+    </div>
+</div>
+
+<!-- Estadísticas -->
+<div class="stats-grid" data-aos="fade-up">
+    <div class="stat-card purple">
+        <div class="stat-label">Puntos GPS</div>
+        <div class="stat-value">{{ total_eventos }}</div>
+    </div>
+    
+    <div class="stat-card blue">
+        <div class="stat-label">Estado</div>
+        <div class="stat-value" style="font-size: 18px;">{{ envio.get_estado_display }}</div>
+    </div>
+    
+    <div class="stat-card green">
+        <div class="stat-label">Conductor</div>
+        <div class="stat-value" style="font-size: 18px;">
+            {% if envio.vehiculo.conductor %}
+                {{ envio.vehiculo.conductor.get_full_name|truncatewords:2 }}
+            {% else %}
+                Sin asignar
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-label">Vehículo</div>
+        <div class="stat-value" style="font-size: 18px;">{{ envio.vehiculo.placa }}</div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Mapa -->
+    <div class="col-lg-8">
+        <div class="map-container" data-aos="fade-up">
+            <div id="map"></div>
+        </div>
+        
+        {% if total_eventos == 0 %}
+        <div class="alert-info-custom" data-aos="fade-up">
+            <h6 style="font-weight: 700; margin-bottom: 12px;">
+                <i class="bi bi-info-circle-fill"></i> Sin Datos GPS
+            </h6>
+            <p style="margin: 0; font-size: 14px; line-height: 1.6;">
+                Este envío aún no tiene ubicaciones GPS registradas. 
+                El conductor debe iniciar el rastreo desde su panel en <strong>/conductores/rastreo/</strong>
+            </p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Panel Lateral -->
+    <div class="col-lg-4">
+        <!-- Información del Envío -->
+        <div class="info-card" data-aos="fade-up">
+            <div class="info-card-title">
+                <i class="bi bi-box-seam-fill text-primary"></i>
+                Información del Envío
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Número de Guía</span>
+                <span class="info-value">{{ envio.numero_guia }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Cliente</span>
+                <span class="info-value">{{ envio.cliente.get_full_name }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Origen</span>
+                <span class="info-value">{{ envio.origen|truncatewords:3 }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Destino</span>
+                <span class="info-value">{{ envio.destino|truncatewords:3 }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Fecha Creación</span>
+                <span class="info-value">{{ envio.fecha_creacion|date:"d/m/Y H:i" }}</span>
+            </div>
+        </div>
+        
+        <!-- Información del Vehículo -->
+        <div class="info-card" data-aos="fade-up" data-aos-delay="100">
+            <div class="info-card-title">
+                <i class="bi bi-truck text-success"></i>
+                Vehículo y Conductor
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Placa</span>
+                <span class="info-value">{{ envio.vehiculo.placa }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Marca/Modelo</span>
+                <span class="info-value">{{ envio.vehiculo.marca }} {{ envio.vehiculo.modelo }}</span>
+            </div>
+            
+            <div class="info-row">
+                <span class="info-label">Conductor</span>
+                <span class="info-value">
+                    {% if envio.vehiculo.conductor %}
+                        {{ envio.vehiculo.conductor.get_full_name }}
+                    {% else %}
+                        Sin asignar
+                    {% endif %}
+                </span>
+            </div>
+            
+            {% if envio.vehiculo.conductor %}
+            <div class="info-row">
+                <span class="info-label">Teléfono</span>
+                <span class="info-value">{{ envio.vehiculo.conductor.telefono|default:"N/A" }}</span>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Timeline de Eventos -->
+        {% if eventos %}
+        <div class="info-card" data-aos="fade-up" data-aos-delay="200">
+            <div class="info-card-title">
+                <i class="bi bi-clock-history text-warning"></i>
+                Historial GPS (Últimos 5)
+            </div>
+            
+            <div class="timeline">
+                {% for evento in eventos|slice:":5" reversed %}
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-content">
+                        <div class="timeline-date">
+                            <i class="bi bi-clock"></i> {{ evento.fecha|date:"d/m/Y H:i:s" }}
+                        </div>
+                        <div class="timeline-text">
+                            <i class="bi bi-geo-alt"></i> 
+                            {% if evento.latitud and evento.longitud %}
+                                {{ evento.latitud|floatformat:6 }}, {{ evento.longitud|floatformat:6 }}
+                            {% else %}
+                                {{ evento.ubicacion }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBWy5uwBhRtafOG-EltQfe10KBp2R7eFTQ&libraries=places"></script>
+<script>
+    let map = null;
+    let markers = [];
+    let pathPolyline = null;
+    let infoWindow = null;
+    
+    // Datos de eventos desde Django
+    const eventosGPS = {{ eventos_json|safe }};
+    
+    // Inicializar mapa
+    document.addEventListener('DOMContentLoaded', function() {
+        // Centro del mapa (Ecuador por defecto o primer evento)
+        let center = { lat: -1.8312, lng: -78.1834 };
+        let zoom = 7;
+        
+        if (eventosGPS.length > 0) {
+            center = { lat: eventosGPS[0].lat, lng: eventosGPS[0].lng };
+            zoom = 13;
+        }
+        
+        // Crear mapa
+        map = new google.maps.Map(document.getElementById('map'), {
+            center: center,
+            zoom: zoom,
+            styles: [
+                {
+                    "featureType": "all",
+                    "elementType": "geometry",
+                    "stylers": [{ "color": "#f5f5f5" }]
+                },
+                {
+                    "featureType": "water",
+                    "elementType": "geometry",
+                    "stylers": [{ "color": "#c9e9ff" }]
+                },
+                {
+                    "featureType": "road",
+                    "elementType": "geometry",
+                    "stylers": [{ "color": "#ffffff" }]
+                }
+            ],
+            mapTypeControl: true,
+            streetViewControl: true,
+            fullscreenControl: true,
+            zoomControl: true
+        });
+        
+        // Inicializar InfoWindow
+        infoWindow = new google.maps.InfoWindow();
+        
+        // Si hay eventos, dibujar ruta y marcadores
+        if (eventosGPS.length > 0) {
+            dibujarRuta();
+            agregarMarcadores();
+        } else {
+            // Mostrar mensaje en el mapa
+            mostrarMensajeSinDatos();
+        }
+        
+        // ✅ NUEVO: Conectar WebSocket para actualizaciones en tiempo real
+        conectarWebSocket();
+    });
+    
+    // Dibujar ruta completa
+    function dibujarRuta() {
+        const path = eventosGPS.map(e => ({ lat: e.lat, lng: e.lng }));
+        
+        pathPolyline = new google.maps.Polyline({
+            path: path,
+            geodesic: true,
+            strokeColor: '#667eea',
+            strokeOpacity: 0.8,
+            strokeWeight: 4
+        });
+        
+        pathPolyline.setMap(map);
+        
+        // Ajustar bounds para mostrar toda la ruta
+        const bounds = new google.maps.LatLngBounds();
+        path.forEach(point => bounds.extend(point));
+        map.fitBounds(bounds);
+    }
+    
+    // Agregar marcadores
+    function agregarMarcadores() {
+        // Marcador de inicio (verde)
+        if (eventosGPS.length > 0) {
+            const inicio = eventosGPS[0];
+            const markerInicio = new google.maps.Marker({
+                position: { lat: inicio.lat, lng: inicio.lng },
+                map: map,
+                title: 'Inicio',
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: '#10b981',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 3
+                },
+                label: {
+                    text: 'I',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                }
+            });
+            
+            markerInicio.addListener('click', function() {
+                mostrarInfoWindow(markerInicio, inicio, 'Punto de Inicio');
+            });
+            
+            markers.push(markerInicio);
+        }
+        
+        // Marcador de fin (rojo)
+        if (eventosGPS.length > 1) {
+            const fin = eventosGPS[eventosGPS.length - 1];
+            const markerFin = new google.maps.Marker({
+                position: { lat: fin.lat, lng: fin.lng },
+                map: map,
+                title: 'Última Ubicación',
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 12,
+                    fillColor: '#ef4444',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 3
+                },
+                label: {
+                    text: 'F',
+                    color: 'white',
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                },
+                animation: google.maps.Animation.BOUNCE
+            });
+            
+            markerFin.addListener('click', function() {
+                mostrarInfoWindow(markerFin, fin, 'Última Ubicación');
+            });
+            
+            markers.push(markerFin);
+            
+            // Detener animación después de 3 segundos
+            setTimeout(() => {
+                markerFin.setAnimation(null);
+            }, 3000);
+        }
+        
+        // Marcadores intermedios (pequeños, púrpura)
+        if (eventosGPS.length > 2) {
+            for (let i = 1; i < eventosGPS.length - 1; i++) {
+                const evento = eventosGPS[i];
+                const marker = new google.maps.Marker({
+                    position: { lat: evento.lat, lng: evento.lng },
+                    map: map,
+                    title: `Punto ${i + 1}`,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 5,
+                        fillColor: '#667eea',
+                        fillOpacity: 0.7,
+                        strokeColor: '#ffffff',
+                        strokeWeight: 2
+                    }
+                });
+                
+                marker.addListener('click', function() {
+                    mostrarInfoWindow(marker, evento, `Punto ${i + 1}`);
+                });
+                
+                markers.push(marker);
+            }
+        }
+    }
+    
+    // Mostrar InfoWindow
+    function mostrarInfoWindow(marker, evento, titulo) {
+        const content = `
+            <div style="padding: 12px; min-width: 250px;">
+                <h6 style="font-weight: 700; color: #1e293b; margin-bottom: 12px;">
+                    <i class="bi bi-geo-alt-fill" style="color: #667eea;"></i> ${titulo}
+                </h6>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px;">
+                    <span style="color: #64748b;">Latitud:</span>
+                    <span style="color: #0f172a; font-weight: 600;">${evento.lat.toFixed(6)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px;">
+                    <span style="color: #64748b;">Longitud:</span>
+                    <span style="color: #0f172a; font-weight: 600;">${evento.lng.toFixed(6)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
+                    <span style="color: #64748b;">Fecha:</span>
+                    <span style="color: #0f172a; font-weight: 600;">${evento.fecha}</span>
+                </div>
+                ${evento.ubicacion ? `
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;">
+                    <i class="bi bi-pin-map"></i> ${evento.ubicacion}
+                </div>
+                ` : ''}
+            </div>
+        `;
+        
+        infoWindow.setContent(content);
+        infoWindow.open(map, marker);
+    }
+    
+    // Mostrar mensaje cuando no hay datos
+    function mostrarMensajeSinDatos() {
+        const centerControlDiv = document.createElement('div');
+        centerControlDiv.style.backgroundColor = 'white';
+        centerControlDiv.style.border = '2px solid #e2e8f0';
+        centerControlDiv.style.borderRadius = '16px';
+        centerControlDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+        centerControlDiv.style.cursor = 'pointer';
+        centerControlDiv.style.marginTop = '10px';
+        centerControlDiv.style.padding = '20px';
+        centerControlDiv.style.textAlign = 'center';
+        centerControlDiv.innerHTML = `
+            <div style="color: #64748b;">
+                <i class="bi bi-geo-alt" style="font-size: 48px; color: #cbd5e1;"></i>
+                <p style="margin: 12px 0 0 0; font-weight: 600;">Sin datos GPS</p>
+                <p style="margin: 4px 0 0 0; font-size: 13px;">El conductor debe iniciar el rastreo</p>
+            </div>
+        `;
+        
+        map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
+    }
+    
+    // ✅ FUNCIONES WEBSOCKET PARA TIEMPO REAL
+    let socket = null;
+    let reconnectInterval = null;
+    
+    function conectarWebSocket() {
+        const envioId = {{ envio.id }};
+        const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
+        const wsUrl = `${wsScheme}://${window.location.host}/ws/tracking/${envioId}/`;
+        
+        console.log('🔌 Conectando WebSocket:', wsUrl);
+        
+        try {
+            socket = new WebSocket(wsUrl);
+            
+            socket.onopen = function(e) {
+                console.log('✅ WebSocket conectado');
+                mostrarNotificacion('Conectado - Actualizaciones en tiempo real activas', 'success');
+                
+                // Limpiar intervalo de reconexión si existe
+                if (reconnectInterval) {
+                    clearInterval(reconnectInterval);
+                    reconnectInterval = null;
+                }
+            };
+            
+            socket.onmessage = function(e) {
+                const data = JSON.parse(e.data);
+                console.log('📨 Mensaje recibido:', data);
+                
+                if (data.type === 'connection_established') {
+                    console.log('✅', data.message);
+                } else if (data.type === 'gps_update') {
+                    // Actualizar mapa en tiempo real
+                    actualizarMapaEnTiempoReal(data.data);
+                }
+            };
+            
+            socket.onclose = function(e) {
+                console.log('❌ WebSocket desconectado');
+                mostrarNotificacion('Desconectado - Intentando reconectar...', 'warning');
+                
+                // Intentar reconectar cada 5 segundos
+                if (!reconnectInterval) {
+                    reconnectInterval = setInterval(() => {
+                        console.log('🔄 Intentando reconectar...');
+                        conectarWebSocket();
+                    }, 5000);
+                }
+            };
+            
+            socket.onerror = function(error) {
+                console.error('❌ Error WebSocket:', error);
+            };
+            
+        } catch (error) {
+            console.error('❌ Error al crear WebSocket:', error);
+        }
+    }
+    
+    function actualizarMapaEnTiempoReal(coords) {
+        console.log('🗺️ Actualizando mapa con nueva ubicación:', coords);
+        
+        // Agregar punto a eventosGPS
+        eventosGPS.push(coords);
+        
+        // Crear nuevo marcador
+        const newMarker = new google.maps.Marker({
+            position: { lat: coords.lat, lng: coords.lng },
+            map: map,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 8,
+                fillColor: '#667eea',
+                fillOpacity: 1,
+                strokeColor: '#ffffff',
+                strokeWeight: 2
+            },
+            animation: google.maps.Animation.DROP
+        });
+        
+        // Agregar click listener
+        newMarker.addListener('click', function() {
+            mostrarInfoWindow(newMarker, coords, 'Nueva Ubicación');
+        });
+        
+        markers.push(newMarker);
+        
+        // Actualizar polyline
+        if (pathPolyline) {
+            const path = pathPolyline.getPath();
+            path.push(new google.maps.LatLng(coords.lat, coords.lng));
+        }
+        
+        // Centrar mapa en nueva ubicación
+        map.setCenter({ lat: coords.lat, lng: coords.lng });
+        map.setZoom(15);
+        
+        // Mostrar notificación
+        mostrarNotificacion(`Nueva ubicación recibida de ${coords.conductor || 'conductor'}`, 'success');
+    }
+    
+    function mostrarNotificacion(mensaje, tipo = 'info') {
+        // Crear elemento de notificación
+        const notif = document.createElement('div');
+        notif.className = `alert alert-${tipo} position-fixed`;
+        notif.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; animation: slideIn 0.3s ease;';
+        notif.innerHTML = `
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-${tipo === 'success' ? 'check-circle' : tipo === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                <span>${mensaje}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notif);
+        
+        // Remover después de 3 segundos
+        setTimeout(() => {
+            notif.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => notif.remove(), 300);
+        }, 3000);
+    }
+    
+    // Cerrar WebSocket al salir
+    window.addEventListener('beforeunload', function() {
+        if (socket) {
+            socket.close();
+        }
+    });
+</script>
+
+<style>
+@keyframes slideIn {
+    from {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(400px);
+        opacity: 0;
+    }
+}
+</style>
+
+{% endblock %}

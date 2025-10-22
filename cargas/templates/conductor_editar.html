@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Conductor - {{ conductor.nombre_completo }}{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Editar Conductor</h1>
+            <p class="page-subtitle">Actualiza la información del conductor</p>
+        </div>
+        <a href="{% url 'conductor_detalle' conductor.id %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Cancelar
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="modern-card" data-aos="fade-up">
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Información Personal -->
+                <h5 style="font-weight: 700; color: #0f172a; margin-bottom: 24px;">
+                    <i class="bi bi-person text-primary"></i> Información Personal
+                </h5>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                            Nombre <span style="color: #ef4444;">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               name="first_name" 
+                               value="{{ conductor.first_name }}" 
+                               required
+                               style="border-radius: 10px; padding: 12px;">
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                            Apellido <span style="color: #ef4444;">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               name="last_name" 
+                               value="{{ conductor.last_name }}" 
+                               required
+                               style="border-radius: 10px; padding: 12px;">
+                    </div>
+                </div>
+                
+                <!-- Información de Contacto -->
+                <h5 style="font-weight: 700; color: #0f172a; margin-bottom: 24px;">
+                    <i class="bi bi-envelope text-primary"></i> Información de Contacto
+                </h5>
+                
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                            Email <span style="color: #ef4444;">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background: #f8fafc;">
+                                <i class="bi bi-envelope"></i>
+                            </span>
+                            <input type="email" 
+                                   class="form-control" 
+                                   name="email" 
+                                   value="{{ conductor.email }}" 
+                                   required
+                                   style="border-radius: 0 10px 10px 0; padding: 12px;">
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                            Teléfono
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background: #f8fafc;">
+                                <i class="bi bi-telephone"></i>
+                            </span>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   name="telefono" 
+                                   value="{{ conductor.telefono|default:'' }}" 
+                                   placeholder="0999999999"
+                                   style="border-radius: 0 10px 10px 0; padding: 12px;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                        Documento de Identidad
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background: #f8fafc;">
+                            <i class="bi bi-card-text"></i>
+                        </span>
+                        <input type="text" 
+                               class="form-control" 
+                               name="documento" 
+                               value="{{ conductor.documento|default:'' }}" 
+                               placeholder="1234567890"
+                               style="border-radius: 0 10px 10px 0; padding: 12px;">
+                    </div>
+                </div>
+                
+                <!-- Seguridad -->
+                <h5 style="font-weight: 700; color: #0f172a; margin-bottom: 24px;">
+                    <i class="bi bi-shield-lock text-primary"></i> Seguridad
+                </h5>
+                
+                <div class="mb-4">
+                    <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                        Nueva Contraseña
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background: #f8fafc;">
+                            <i class="bi bi-key"></i>
+                        </span>
+                        <input type="password" 
+                               class="form-control" 
+                               name="password" 
+                               placeholder="Dejar en blanco para mantener la actual"
+                               style="border-radius: 0 10px 10px 0; padding: 12px;">
+                    </div>
+                    <small style="color: #64748b; font-size: 12px;">
+                        <i class="bi bi-info-circle"></i> Solo completa este campo si deseas cambiar la contraseña
+                    </small>
+                </div>
+                
+                <!-- Estado -->
+                <h5 style="font-weight: 700; color: #0f172a; margin-bottom: 24px;">
+                    <i class="bi bi-toggle-on text-primary"></i> Estado
+                </h5>
+                
+                <div class="mb-4">
+                    <div class="form-check form-switch" style="padding-left: 3rem;">
+                        <input class="form-check-input" 
+                               type="checkbox" 
+                               name="activo" 
+                               id="activoCheck"
+                               {% if conductor.activo %}checked{% endif %}
+                               style="width: 3rem; height: 1.5rem; cursor: pointer;">
+                        <label class="form-check-label" for="activoCheck" style="font-weight: 600; margin-left: 12px; cursor: pointer;">
+                            Conductor Activo
+                        </label>
+                    </div>
+                    <small style="color: #64748b; font-size: 12px; margin-left: 3rem; display: block; margin-top: 8px;">
+                        <i class="bi bi-info-circle"></i> Los conductores inactivos no pueden ser asignados a nuevos envíos
+                    </small>
+                </div>
+                
+                <!-- Botones -->
+                <div class="d-flex gap-3 justify-content-end" style="margin-top: 32px;">
+                    <a href="{% url 'conductor_detalle' conductor.id %}" class="btn btn-outline-secondary" style="border-radius: 10px; padding: 12px 32px;">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-modern btn-warning" style="border-radius: 10px; padding: 12px 32px;">
+                        <i class="bi bi-check-circle"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- Información Adicional -->
+        <div class="alert alert-info" style="border-radius: 12px; border: 1px solid #3b82f6; background: #eff6ff; margin-top: 24px;" data-aos="fade-up" data-aos-delay="100">
+            <h6 style="font-weight: 700; color: #1e40af; margin-bottom: 12px;">
+                <i class="bi bi-info-circle-fill"></i> Información Importante
+            </h6>
+            <ul style="margin: 0; padding-left: 20px; color: #1e40af;">
+                <li>Los cambios se aplicarán inmediatamente</li>
+                <li>El conductor recibirá una notificación si cambias su email</li>
+                <li>Si cambias la contraseña, el conductor deberá usar la nueva para iniciar sesión</li>
+                <li>Los conductores inactivos no aparecerán en las listas de asignación</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

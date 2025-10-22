@@ -1,0 +1,369 @@
+{% extends 'base_modern.html' %}
+
+{% block title %}Dashboard - CargoTrack Pro 🇪🇨{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h1 class="page-title">Dashboard</h1>
+    <p class="page-subtitle">Bienvenido al sistema de trazabilidad de carga</p>
+</div>
+
+<!-- Tarjetas de Estadísticas -->
+<div class="row g-4 mb-4">
+    <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="0">
+        <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
+            <div class="stat-card-icon">
+                <i class="bi bi-box-seam"></i>
+            </div>
+            <div class="stat-card-value" id="envios-count">{{ envios_count }}</div>
+            <div class="stat-card-label">Total Envíos</div>
+            <div class="stat-card-trend">
+                <i class="bi bi-arrow-up"></i>
+                <span>+12%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+        <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+            <div class="stat-card-icon">
+                <i class="bi bi-truck"></i>
+            </div>
+            <div class="stat-card-value" id="vehiculos-count">{{ vehiculos_count }}</div>
+            <div class="stat-card-label">Vehículos Activos</div>
+            <div class="stat-card-trend">
+                <i class="bi bi-check-circle"></i>
+                <span>{{ vehiculos_disponibles_pct }}%</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+        <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+            <div class="stat-card-icon">
+                <i class="bi bi-person-badge"></i>
+            </div>
+            <div class="stat-card-value" id="conductores-count">{{ conductores_count }}</div>
+            <div class="stat-card-label">Conductores</div>
+            <div class="stat-card-trend">
+                <i class="bi bi-people"></i>
+                <span>Activos</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+        <div class="stat-card" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+            <div class="stat-card-icon">
+                <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="stat-card-value" id="alertas-count">{{ alertas_count }}</div>
+            <div class="stat-card-label">Alertas Activas</div>
+            <div class="stat-card-trend">
+                <i class="bi bi-bell"></i>
+                <span>Urgente</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráficos y Datos -->
+<div class="row g-4 mb-4">
+    <!-- Gráfico de Envíos por Mes -->
+    <div class="col-lg-8" data-aos="fade-up">
+        <div class="modern-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="mb-1" style="font-weight: 700;">Envíos por Mes</h5>
+                    <p class="text-muted mb-0" style="font-size: 14px;">Últimos 6 meses</p>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary active">6M</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary">1A</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary">Todo</button>
+                </div>
+            </div>
+            <canvas id="enviosChart" height="80"></canvas>
+        </div>
+    </div>
+
+    <!-- Estado de Vehículos -->
+    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="modern-card">
+            <h5 class="mb-4" style="font-weight: 700;">Estado de Vehículos</h5>
+            <canvas id="vehiculosChart" height="200"></canvas>
+            <div class="mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width: 12px; height: 12px; background: #10b981; border-radius: 50%;"></div>
+                        <span style="font-size: 14px;">Disponibles</span>
+                    </div>
+                    <span style="font-weight: 600;">{{ vehiculos_disponibles_pct }}%</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width: 12px; height: 12px; background: #3b82f6; border-radius: 50%;"></div>
+                        <span style="font-size: 14px;">En Ruta</span>
+                    </div>
+                    <span style="font-weight: 600;">{{ vehiculos_en_ruta_pct }}%</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width: 12px; height: 12px; background: #ef4444; border-radius: 50%;"></div>
+                        <span style="font-size: 14px;">Mantenimiento</span>
+                    </div>
+                    <span style="font-weight: 600;">{{ vehiculos_mantenimiento_pct }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Envíos Recientes y Alertas -->
+<div class="row g-4">
+    <!-- Envíos Recientes -->
+    <div class="col-lg-8" data-aos="fade-up">
+        <div class="modern-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0" style="font-weight: 700;">Envíos Recientes</h5>
+                <a href="{% url 'envios_list' %}" class="btn btn-sm btn-modern btn-primary">
+                    Ver Todos
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Número de Guía</th>
+                            <th>Origen → Destino</th>
+                            <th>Estado</th>
+                            <th>Prioridad</th>
+                            <th>Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for envio in ultimos_envios %}
+                        <tr>
+                            <td><strong>{{ envio.numero_guia }}</strong></td>
+                            <td>
+                                <div style="font-size: 14px;">
+                                    <i class="bi bi-geo-alt text-success"></i> {{ envio.origen|truncatewords:2 }}
+                                    <br>
+                                    <i class="bi bi-geo-alt-fill text-danger"></i> {{ envio.destino|truncatewords:2 }}
+                                </div>
+                            </td>
+                            <td>
+                                {% if envio.estado == 'en_ruta' %}
+                                    <span class="status-badge info">En Ruta</span>
+                                {% elif envio.estado == 'entregado' %}
+                                    <span class="status-badge success">Entregado</span>
+                                {% elif envio.estado == 'pendiente' %}
+                                    <span class="status-badge warning">Pendiente</span>
+                                {% else %}
+                                    <span class="status-badge danger">Incidencia</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if envio.prioridad == 'urgente' %}
+                                    <span class="badge bg-danger">Urgente</span>
+                                {% elif envio.prioridad == 'alta' %}
+                                    <span class="badge bg-warning">Alta</span>
+                                {% elif envio.prioridad == 'media' %}
+                                    <span class="badge bg-info">Media</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Baja</span>
+                                {% endif %}
+                            </td>
+                            <td style="font-size: 13px; color: #64748b;">
+                                {{ envio.fecha_creacion|date:"d/m/Y H:i" }}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No hay envíos recientes</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas Recientes -->
+    <div class="col-lg-4" data-aos="fade-up" data-aos-delay="100">
+        <div class="modern-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h5 class="mb-0" style="font-weight: 700;">Alertas Recientes</h5>
+                <a href="{% url 'alertas_list' %}" class="btn btn-sm btn-outline-primary">Ver Todas</a>
+            </div>
+            <div class="d-flex flex-column gap-3">
+                {% for alerta in ultimas_alertas %}
+                <div class="p-3 rounded" style="background: #f8fafc; border-left: 4px solid 
+                    {% if alerta.nivel == 'critica' %}#ef4444
+                    {% elif alerta.nivel == 'alta' %}#f59e0b
+                    {% elif alerta.nivel == 'media' %}#3b82f6
+                    {% else %}#10b981{% endif %};">
+                    <div class="d-flex align-items-start gap-2 mb-2">
+                        <i class="bi bi-exclamation-triangle-fill" style="color: 
+                            {% if alerta.nivel == 'critica' %}#ef4444
+                            {% elif alerta.nivel == 'alta' %}#f59e0b
+                            {% elif alerta.nivel == 'media' %}#3b82f6
+                            {% else %}#10b981{% endif %}; font-size: 20px;"></i>
+                        <div class="flex-grow-1">
+                            <div style="font-weight: 600; font-size: 14px;">{{ alerta.get_tipo_display }}</div>
+                            <div style="font-size: 13px; color: #64748b;">{{ alerta.envio.numero_guia }}</div>
+                        </div>
+                        <span class="badge" style="background: 
+                            {% if alerta.nivel == 'critica' %}#ef4444
+                            {% elif alerta.nivel == 'alta' %}#f59e0b
+                            {% elif alerta.nivel == 'media' %}#3b82f6
+                            {% else %}#10b981{% endif %};">{{ alerta.get_nivel_display }}</span>
+                    </div>
+                    <p class="mb-2" style="font-size: 13px; color: #475569;">{{ alerta.descripcion|truncatewords:15 }}</p>
+                    <small style="color: #94a3b8;">{{ alerta.fecha|timesince }} atrás</small>
+                </div>
+                {% empty %}
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-check-circle" style="font-size: 48px; opacity: 0.3;"></i>
+                    <p class="mb-0 mt-2">No hay alertas activas</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Gráfico de Envíos por Mes
+const enviosCtx = document.getElementById('enviosChart').getContext('2d');
+new Chart(enviosCtx, {
+    type: 'line',
+    data: {
+        labels: {{ meses|safe }},
+        datasets: [{
+            label: 'Envíos',
+            data: {{ envios_data|safe }},
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 6,
+            pointBackgroundColor: '#3b82f6',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointHoverRadius: 8
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: '#1e293b',
+                padding: 12,
+                borderRadius: 8,
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                displayColors: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: '#e2e8f0',
+                    drawBorder: false
+                },
+                ticks: {
+                    color: '#64748b',
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    color: '#64748b',
+                    font: {
+                        size: 12
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Gráfico de Vehículos
+const vehiculosCtx = document.getElementById('vehiculosChart').getContext('2d');
+new Chart(vehiculosCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Disponibles', 'En Ruta', 'Mantenimiento'],
+        datasets: [{
+            data: {{ vehiculos_estado|safe }},
+            backgroundColor: ['#10b981', '#3b82f6', '#ef4444'],
+            borderWidth: 0,
+            hoverOffset: 10
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        cutout: '70%',
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                backgroundColor: '#1e293b',
+                padding: 12,
+                borderRadius: 8,
+                titleColor: '#fff',
+                bodyColor: '#fff'
+            }
+        }
+    }
+});
+
+// Animación de contadores
+function animateValue(id, start, end, duration) {
+    const obj = document.getElementById(id);
+    const range = end - start;
+    const increment = end > start ? 1 : -1;
+    const stepTime = Math.abs(Math.floor(duration / range));
+    let current = start;
+    
+    const timer = setInterval(function() {
+        current += increment;
+        obj.textContent = current;
+        if (current == end) {
+            clearInterval(timer);
+        }
+    }, stepTime);
+}
+
+// Iniciar animaciones
+document.addEventListener('DOMContentLoaded', function() {
+    animateValue('envios-count', 0, {{ envios_count }}, 1000);
+    animateValue('vehiculos-count', 0, {{ vehiculos_count }}, 1000);
+    animateValue('conductores-count', 0, {{ conductores_count }}, 1000);
+    animateValue('alertas-count', 0, {{ alertas_count }}, 1000);
+});
+
+// Actualizar datos cada 30 segundos
+setInterval(function() {
+    location.reload();
+}, 30000);
+</script>
+{% endblock %}

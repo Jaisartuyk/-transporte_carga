@@ -1,0 +1,783 @@
+{% extends 'base.html' %}
+
+{% block title %}Envíos - CargoTrack Pro 🇪🇨{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="page-title">Gestión de Envíos</h1>
+            <p class="page-subtitle">Administra todos los envíos del sistema</p>
+        </div>
+        <button type="button" class="btn btn-modern btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoEnvio">
+            <i class="bi bi-plus-circle"></i>
+            Nuevo Envío
+        </button>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="modern-card mb-4" data-aos="fade-up">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label class="form-label" style="font-weight: 600; font-size: 14px;">Estado</label>
+            <select class="form-select" id="filtro-estado">
+                <option value="">Todos</option>
+                <option value="pendiente">Pendiente</option>
+                <option value="en_ruta">En Ruta</option>
+                <option value="entregado">Entregado</option>
+                <option value="incidencia">Incidencia</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" style="font-weight: 600; font-size: 14px;">Prioridad</label>
+            <select class="form-select" id="filtro-prioridad">
+                <option value="">Todas</option>
+                <option value="urgente">Urgente</option>
+                <option value="alta">Alta</option>
+                <option value="media">Media</option>
+                <option value="baja">Baja</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" style="font-weight: 600; font-size: 14px;">Buscar</label>
+            <input type="text" class="form-control" id="buscar-envio" placeholder="Número de guía, origen, destino...">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" style="opacity: 0;">.</label>
+            <button class="btn btn-modern btn-primary w-100">
+                <i class="bi bi-search"></i>
+                Buscar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Estadísticas Rápidas -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="0">
+        <div class="modern-card text-center" style="border-left: 4px solid #fbbf24;">
+            <div style="font-size: 32px; font-weight: 700; color: #fbbf24;">{{ pendientes }}</div>
+            <div style="font-size: 14px; color: #64748b;">Pendientes</div>
+        </div>
+    </div>
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="100">
+        <div class="modern-card text-center" style="border-left: 4px solid #3b82f6;">
+            <div style="font-size: 32px; font-weight: 700; color: #3b82f6;">{{ en_ruta }}</div>
+            <div style="font-size: 14px; color: #64748b;">En Ruta</div>
+        </div>
+    </div>
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="200">
+        <div class="modern-card text-center" style="border-left: 4px solid #10b981;">
+            <div style="font-size: 32px; font-weight: 700; color: #10b981;">{{ entregados }}</div>
+            <div style="font-size: 14px; color: #64748b;">Entregados</div>
+        </div>
+    </div>
+    <div class="col-md-3" data-aos="fade-up" data-aos-delay="300">
+        <div class="modern-card text-center" style="border-left: 4px solid #ef4444;">
+            <div style="font-size: 32px; font-weight: 700; color: #ef4444;">{{ incidencias }}</div>
+            <div style="font-size: 14px; color: #64748b;">Incidencias</div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla de Envíos -->
+<div class="modern-card" data-aos="fade-up">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead style="background: #f8fafc;">
+                <tr>
+                    <th style="font-weight: 600; font-size: 14px; color: #475569;">Número de Guía</th>
+                    <th style="font-weight: 600; font-size: 14px; color: #475569;">Cliente</th>
+                    <th style="font-weight: 600; font-size: 14px; color: #475569;">Ruta</th>
+                    <th style="font-weight: 600; font-size: 14px; color: #475569;">Vehículo</th>
+                    <th style="font-weight: 600; font-size: 14px; color: #475569;">Estado</th>
+                    <th style="font-weight: 600; font-size: 14px; color: #475569;">Prioridad</th>
+                    <th style="font-weight: 600; font-size: 14px; color: #475569;">Fecha</th>
+                    <th style="font-weight: 600; font-size: 14px; color: #475569;">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for envio in envios %}
+                <tr style="transition: all 0.2s ease;">
+                    <td>
+                        <div style="font-weight: 600; color: #0f172a;">{{ envio.numero_guia }}</div>
+                        <div style="font-size: 12px; color: #94a3b8;">
+                            <i class="bi bi-box-seam"></i> {{ envio.descripcion_carga|truncatewords:3 }}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 500;">{{ envio.cliente.nombre_completo }}</div>
+                        <div style="font-size: 12px; color: #64748b;">{{ envio.cliente.telefono }}</div>
+                    </td>
+                    <td>
+                        <div style="font-size: 13px;">
+                            <div class="mb-1">
+                                <i class="bi bi-geo-alt text-success"></i>
+                                <span style="font-weight: 500;">{{ envio.origen|truncatewords:3 }}</span>
+                            </div>
+                            <div>
+                                <i class="bi bi-geo-alt-fill text-danger"></i>
+                                <span style="font-weight: 500;">{{ envio.destino|truncatewords:3 }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if envio.vehiculo %}
+                            <div style="font-weight: 500;">{{ envio.vehiculo.placa }}</div>
+                            <div style="font-size: 12px; color: #64748b;">{{ envio.vehiculo.marca }}</div>
+                        {% else %}
+                            <span style="color: #94a3b8; font-style: italic;">Sin asignar</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if envio.estado == 'en_ruta' %}
+                            <span class="status-badge info">En Ruta</span>
+                        {% elif envio.estado == 'entregado' %}
+                            <span class="status-badge success">Entregado</span>
+                        {% elif envio.estado == 'pendiente' %}
+                            <span class="status-badge warning">Pendiente</span>
+                        {% elif envio.estado == 'incidencia' %}
+                            <span class="status-badge danger">Incidencia</span>
+                        {% else %}
+                            <span class="status-badge">{{ envio.get_estado_display }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if envio.prioridad == 'urgente' %}
+                            <span class="badge" style="background: #ef4444; font-size: 11px;">
+                                <i class="bi bi-exclamation-circle"></i> Urgente
+                            </span>
+                        {% elif envio.prioridad == 'alta' %}
+                            <span class="badge" style="background: #f59e0b; font-size: 11px;">Alta</span>
+                        {% elif envio.prioridad == 'media' %}
+                            <span class="badge" style="background: #3b82f6; font-size: 11px;">Media</span>
+                        {% else %}
+                            <span class="badge" style="background: #64748b; font-size: 11px;">Baja</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size: 13px; color: #64748b;">
+                        {{ envio.fecha_creacion|date:"d/m/Y" }}<br>
+                        <small>{{ envio.fecha_creacion|date:"H:i" }}</small>
+                    </td>
+                    <td>
+                        <div class="btn-group" role="group">
+                            <a href="{% url 'envio_detalle' envio.id %}" class="btn btn-sm btn-outline-primary" title="Ver detalles">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a href="{% url 'rastrear_envio' envio.id %}" class="btn btn-sm btn-outline-success" title="Rastrear en tiempo real">
+                                <i class="bi bi-geo-alt"></i>
+                            </a>
+                            <a href="{% url 'editar_envio' envio.id %}" class="btn btn-sm btn-outline-warning" title="Editar envío">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5">
+                        <i class="bi bi-inbox" style="font-size: 64px; color: #cbd5e1;"></i>
+                        <p class="mt-3 mb-0" style="color: #64748b;">No hay envíos registrados</p>
+                        <button type="button" class="btn btn-modern btn-primary mt-3" data-bs-toggle="modal" data-bs-target="#modalNuevoEnvio">
+                            <i class="bi bi-plus-circle"></i>
+                            Crear Primer Envío
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Nuevo Envío -->
+<div class="modal fade" id="modalNuevoEnvio" tabindex="-1" aria-labelledby="modalNuevoEnvioLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border-radius: 16px 16px 0 0;">
+                <h5 class="modal-title" id="modalNuevoEnvioLabel">
+                    <i class="bi bi-box-seam"></i> Nuevo Envío
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'crear_envio' %}" id="formNuevoEnvio">
+                <div class="modal-body" style="padding: 32px;">
+                    {% csrf_token %}
+                    
+                    <!-- Información del Cliente -->
+                    <h6 class="mb-3" style="font-weight: 700; color: #0f172a;">
+                        <i class="bi bi-person-circle"></i> Información del Cliente
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                <i class="bi bi-person"></i> Cliente
+                            </label>
+                            <select class="form-select" name="cliente" required style="border-radius: 10px; padding: 12px;">
+                                <option value="">Seleccione un cliente</option>
+                                {% for cliente in clientes %}
+                                <option value="{{ cliente.id }}">{{ cliente.nombre_completo }} - {{ cliente.email }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                <i class="bi bi-truck"></i> Vehículo
+                            </label>
+                            <select class="form-select" name="vehiculo" style="border-radius: 10px; padding: 12px;">
+                                <option value="">Sin asignar</option>
+                                {% for vehiculo in vehiculos %}
+                                <option value="{{ vehiculo.id }}">{{ vehiculo.placa }} - {{ vehiculo.marca }} {{ vehiculo.modelo }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Origen y Destino con Google Maps -->
+                    <h6 class="mb-3" style="font-weight: 700; color: #0f172a;">
+                        <i class="bi bi-geo-alt"></i> Ruta
+                    </h6>
+                    
+                    <!-- Instrucciones -->
+                    <div class="alert alert-info" style="background: #e0f2fe; border: 1px solid #0ea5e9; border-radius: 10px; padding: 12px; margin-bottom: 16px;">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Tip:</strong> Escribe el lugar o haz clic en el mapa para seleccionar origen (verde) y destino (rojo)
+                    </div>
+                    
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                <i class="bi bi-geo-alt text-success"></i> Origen
+                            </label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="origenInput" name="origen" required placeholder="Ej: Quito, Guayaquil..." autocomplete="off" style="border-radius: 10px 0 0 10px; padding: 12px;">
+                                <button type="button" class="btn btn-outline-success" onclick="buscarLugar('origen')" style="border-radius: 0 10px 10px 0;">
+                                    <i class="bi bi-search"></i> Buscar
+                                </button>
+                            </div>
+                            <input type="hidden" name="origen_lat" id="origenLat">
+                            <input type="hidden" name="origen_lng" id="origenLng">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                <i class="bi bi-geo-alt-fill text-danger"></i> Destino Final
+                            </label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="destinoInput" name="destino" required placeholder="Ej: Cuenca, Ambato..." autocomplete="off" style="border-radius: 10px 0 0 10px; padding: 12px;">
+                                <button type="button" class="btn btn-outline-danger" onclick="buscarLugar('destino')" style="border-radius: 0 10px 10px 0;">
+                                    <i class="bi bi-search"></i> Buscar
+                                </button>
+                            </div>
+                            <input type="hidden" name="destino_lat" id="destinoLat">
+                            <input type="hidden" name="destino_lng" id="destinoLng">
+                        </div>
+                    </div>
+                    
+                    <!-- Paradas Intermedias -->
+                    <div class="mb-3">
+                        <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                            <i class="bi bi-pin-map text-primary"></i> Paradas Intermedias (Opcional)
+                        </label>
+                        <div id="paradasContainer"></div>
+                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="agregarParada()">
+                            <i class="bi bi-plus-circle"></i> Agregar Parada
+                        </button>
+                        <input type="hidden" name="paradas" id="paradasData">
+                    </div>
+                    
+                    <!-- Mapa -->
+                    <div id="mapEnvio" style="width: 100%; height: 400px; border-radius: 12px; margin-bottom: 16px;"></div>
+                    
+                    <!-- Botones de ayuda -->
+                    <div class="d-flex gap-2 mb-4">
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="setModoMapa('origen')">
+                            <i class="bi bi-geo-alt"></i> Marcar Origen
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="setModoMapa('destino')">
+                            <i class="bi bi-geo-alt-fill"></i> Marcar Destino
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="limpiarMarcadores()">
+                            <i class="bi bi-trash"></i> Limpiar
+                        </button>
+                    </div>
+
+                    <!-- Detalles de la Carga -->
+                    <h6 class="mb-3" style="font-weight: 700; color: #0f172a;">
+                        <i class="bi bi-box"></i> Detalles de la Carga
+                    </h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                <i class="bi bi-card-text"></i> Descripción
+                            </label>
+                            <textarea class="form-control" name="descripcion_carga" rows="2" placeholder="Electrodomésticos, Medicamentos, etc." style="border-radius: 10px; padding: 12px;"></textarea>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                <i class="bi bi-speedometer"></i> Peso (kg)
+                            </label>
+                            <input type="number" class="form-control" name="peso_kg" step="0.01" placeholder="2500.00" style="border-radius: 10px; padding: 12px;">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                <i class="bi bi-cash"></i> Valor Declarado ($)
+                            </label>
+                            <input type="number" class="form-control" name="valor_declarado" step="0.01" placeholder="25000.00" style="border-radius: 10px; padding: 12px;">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                <i class="bi bi-exclamation-triangle"></i> Prioridad
+                            </label>
+                            <select class="form-select" name="prioridad" style="border-radius: 10px; padding: 12px;">
+                                <option value="baja">Baja</option>
+                                <option value="media" selected>Media</option>
+                                <option value="alta">Alta</option>
+                                <option value="urgente">Urgente</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Contactos -->
+                    <h6 class="mb-3" style="font-weight: 700; color: #0f172a;">
+                        <i class="bi bi-telephone"></i> Contactos
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                Contacto Origen
+                            </label>
+                            <input type="text" class="form-control" name="contacto_origen" placeholder="Almacén Central" style="border-radius: 10px; padding: 12px;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                Teléfono Origen
+                            </label>
+                            <input type="text" class="form-control" name="telefono_origen" placeholder="+593 2 300 1234" style="border-radius: 10px; padding: 12px;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                Contacto Destino
+                            </label>
+                            <input type="text" class="form-control" name="contacto_destino" placeholder="Tienda Principal" style="border-radius: 10px; padding: 12px;">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" style="font-weight: 600; font-size: 14px;">
+                                Teléfono Destino
+                            </label>
+                            <input type="text" class="form-control" name="telefono_destino" placeholder="+593 4 456 7890" style="border-radius: 10px; padding: 12px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top: 1px solid #e2e8f0; padding: 20px 32px;">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius: 10px; padding: 10px 24px;">
+                        <i class="bi bi-x-circle"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border: none; border-radius: 10px; padding: 10px 24px; color: white;">
+                        <i class="bi bi-check-circle"></i> Crear Envío
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filtros en tiempo real
+document.getElementById('buscar-envio').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+document.getElementById('filtro-estado').addEventListener('change', function(e) {
+    const estado = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        if (!estado) {
+            row.style.display = '';
+        } else {
+            const estadoBadge = row.querySelector('.status-badge');
+            if (estadoBadge) {
+                const text = estadoBadge.textContent.toLowerCase();
+                row.style.display = text.includes(estado.replace('_', ' ')) ? '' : 'none';
+            }
+        }
+    });
+});
+
+// Google Maps para el modal de envíos
+let map;
+let origenMarker;
+let destinoMarker;
+let origenAutocomplete;
+let destinoAutocomplete;
+let modoActual = 'origen'; // 'origen' o 'destino'
+let mapInitialized = false;
+
+function initMapAndAutocomplete() {
+    if (mapInitialized) return;
+    
+    // Centrar en Ecuador
+    const ecuador = { lat: -1.831239, lng: -78.183406 };
+    
+    // Crear mapa
+    map = new google.maps.Map(document.getElementById('mapEnvio'), {
+        zoom: 7,
+        center: ecuador,
+        mapTypeControl: true,
+        streetViewControl: false,
+        fullscreenControl: true,
+    });
+
+    // Inicializar autocompletado para origen usando el método tradicional (más compatible)
+    const origenInput = document.getElementById('origenInput');
+    if (origenInput && google.maps.places) {
+        try {
+            origenAutocomplete = new google.maps.places.Autocomplete(origenInput, { 
+                componentRestrictions: { country: 'ec' },
+                fields: ['formatted_address', 'geometry', 'name'],
+                types: ['geocode', 'establishment']
+            });
+
+            origenAutocomplete.addListener('place_changed', function() {
+                const place = origenAutocomplete.getPlace();
+                console.log('📍 Lugar seleccionado (origen):', place);
+                if (place.geometry) {
+                    const address = place.formatted_address || place.name;
+                    setOrigen(place.geometry.location, address);
+                }
+            });
+            
+            console.log('✅ Autocompletado origen inicializado');
+        } catch (error) {
+            console.error('❌ Error al inicializar autocompletado origen:', error);
+        }
+    }
+
+    // Inicializar autocompletado para destino
+    const destinoInput = document.getElementById('destinoInput');
+    if (destinoInput && google.maps.places) {
+        try {
+            destinoAutocomplete = new google.maps.places.Autocomplete(destinoInput, { 
+                componentRestrictions: { country: 'ec' },
+                fields: ['formatted_address', 'geometry', 'name'],
+                types: ['geocode', 'establishment']
+            });
+
+            destinoAutocomplete.addListener('place_changed', function() {
+                const place = destinoAutocomplete.getPlace();
+                console.log('📍 Lugar seleccionado (destino):', place);
+                if (place.geometry) {
+                    const address = place.formatted_address || place.name;
+                    setDestino(place.geometry.location, address);
+                }
+            });
+            
+            console.log('✅ Autocompletado destino inicializado');
+        } catch (error) {
+            console.error('❌ Error al inicializar autocompletado destino:', error);
+        }
+    }
+
+    // Click en el mapa
+    map.addListener('click', function(event) {
+        const geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: event.latLng }, function(results, status) {
+            if (status === 'OK' && results[0]) {
+                if (modoActual === 'origen') {
+                    setOrigen(event.latLng, results[0].formatted_address);
+                } else {
+                    setDestino(event.latLng, results[0].formatted_address);
+                }
+            }
+        });
+    });
+    
+    mapInitialized = true;
+    console.log('✅ Mapa y autocompletado inicializados');
+}
+
+function setOrigen(location, address) {
+    // Remover marcador anterior
+    if (origenMarker) {
+        origenMarker.setMap(null);
+    }
+
+    // Crear nuevo marcador verde
+    origenMarker = new google.maps.Marker({
+        position: location,
+        map: map,
+        title: 'Origen',
+        icon: {
+            url: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+        },
+        animation: google.maps.Animation.DROP
+    });
+
+    // Actualizar campos
+    document.getElementById('origenInput').value = address;
+    document.getElementById('origenLat').value = location.lat();
+    document.getElementById('origenLng').value = location.lng();
+
+    // Centrar mapa
+    map.panTo(location);
+    
+    // Cambiar a modo destino automáticamente
+    modoActual = 'destino';
+}
+
+function setDestino(location, address) {
+    // Remover marcador anterior
+    if (destinoMarker) {
+        destinoMarker.setMap(null);
+    }
+
+    // Crear nuevo marcador rojo
+    destinoMarker = new google.maps.Marker({
+        position: location,
+        map: map,
+        title: 'Destino',
+        icon: {
+            url: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png'
+        },
+        animation: google.maps.Animation.DROP
+    });
+
+    // Actualizar campos
+    document.getElementById('destinoInput').value = address;
+    document.getElementById('destinoLat').value = location.lat();
+    document.getElementById('destinoLng').value = location.lng();
+
+    // Centrar mapa
+    map.panTo(location);
+
+    // Si hay origen y destino, ajustar vista para ver ambos
+    if (origenMarker && destinoMarker) {
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend(origenMarker.getPosition());
+        bounds.extend(destinoMarker.getPosition());
+        map.fitBounds(bounds);
+    }
+}
+
+function setModoMapa(modo) {
+    modoActual = modo;
+    const mensaje = modo === 'origen' ? 'Haz clic en el mapa para marcar el ORIGEN' : 'Haz clic en el mapa para marcar el DESTINO';
+    // Opcional: mostrar notificación
+    console.log(mensaje);
+}
+
+// Función para buscar lugar con Geocoding API
+function buscarLugar(tipo) {
+    const input = document.getElementById(tipo + 'Input');
+    const query = input.value.trim();
+    
+    if (!query) {
+        alert('Por favor escribe un lugar para buscar');
+        return;
+    }
+    
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({
+        address: query,
+        componentRestrictions: { country: 'EC' }
+    }, function(results, status) {
+        if (status === 'OK' && results[0]) {
+            const place = results[0];
+            const location = place.geometry.location;
+            const address = place.formatted_address;
+            
+            console.log(`✅ Lugar encontrado (${tipo}):`, address);
+            
+            if (tipo === 'origen') {
+                setOrigen(location, address);
+            } else {
+                setDestino(location, address);
+            }
+            
+            // Actualizar el input con la dirección completa
+            input.value = address;
+        } else {
+            alert('No se encontró el lugar "' + query + '". Intenta con otro nombre o usa el mapa.');
+            console.error('❌ Geocoding falló:', status);
+        }
+    });
+}
+
+// Sistema de paradas intermedias
+let paradas = [];
+let paradaCounter = 0;
+
+function agregarParada() {
+    const index = paradaCounter++;
+    const html = `
+        <div class="input-group mb-2" id="parada-${index}" data-index="${index}">
+            <span class="input-group-text" style="background: #3b82f6; color: white; font-weight: 600;">
+                ${paradas.length + 1}
+            </span>
+            <input type="text" 
+                   class="form-control" 
+                   id="parada-${index}-input" 
+                   placeholder="Ej: Latacunga, Ambato..."
+                   autocomplete="off"
+                   style="padding: 12px;">
+            <button type="button" 
+                    class="btn btn-outline-primary" 
+                    onclick="buscarParada(${index})"
+                    title="Buscar lugar">
+                <i class="bi bi-search"></i>
+            </button>
+            <button type="button" 
+                    class="btn btn-outline-danger" 
+                    onclick="eliminarParada(${index})"
+                    title="Eliminar parada">
+                <i class="bi bi-trash"></i>
+            </button>
+        </div>
+    `;
+    
+    document.getElementById('paradasContainer').insertAdjacentHTML('beforeend', html);
+    paradas.push({ index: index, nombre: '', lat: null, lng: null });
+    actualizarParadasData();
+}
+
+function buscarParada(index) {
+    const input = document.getElementById(`parada-${index}-input`);
+    const query = input.value.trim();
+    
+    if (!query) {
+        alert('Por favor escribe un lugar para buscar');
+        return;
+    }
+    
+    const geocoder = new google.maps.Geocoder();
+    geocoder.geocode({
+        address: query,
+        componentRestrictions: { country: 'EC' }
+    }, function(results, status) {
+        if (status === 'OK' && results[0]) {
+            const place = results[0];
+            const location = place.geometry.location;
+            const address = place.formatted_address;
+            
+            // Actualizar datos de la parada
+            const paradaObj = paradas.find(p => p.index === index);
+            if (paradaObj) {
+                paradaObj.nombre = address;
+                paradaObj.lat = location.lat();
+                paradaObj.lng = location.lng();
+            }
+            
+            input.value = address;
+            actualizarParadasData();
+            
+            // Marcar en el mapa
+            new google.maps.Marker({
+                position: location,
+                map: map,
+                title: `Parada ${index + 1}: ${address}`,
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 8,
+                    fillColor: '#3b82f6',
+                    fillOpacity: 1,
+                    strokeColor: '#ffffff',
+                    strokeWeight: 2
+                }
+            });
+            
+            map.setCenter(location);
+            console.log(`✅ Parada ${index + 1} agregada:`, address);
+        } else {
+            alert('No se encontró el lugar. Intenta con otro nombre.');
+        }
+    });
+}
+
+function eliminarParada(index) {
+    document.getElementById(`parada-${index}`).remove();
+    paradas = paradas.filter(p => p.index !== index);
+    actualizarParadasData();
+    renumerarParadas();
+}
+
+function renumerarParadas() {
+    const elementos = document.querySelectorAll('#paradasContainer .input-group');
+    elementos.forEach((el, idx) => {
+        const numero = el.querySelector('.input-group-text');
+        if (numero) {
+            numero.textContent = idx + 1;
+        }
+    });
+}
+
+function actualizarParadasData() {
+    const paradasValidas = paradas.filter(p => p.nombre && p.lat && p.lng);
+    document.getElementById('paradasData').value = JSON.stringify(paradasValidas);
+}
+
+function limpiarMarcadores() {
+    if (origenMarker) {
+        origenMarker.setMap(null);
+        origenMarker = null;
+    }
+    if (destinoMarker) {
+        destinoMarker.setMap(null);
+        destinoMarker = null;
+    }
+    document.getElementById('origenInput').value = '';
+    document.getElementById('origenLat').value = '';
+    document.getElementById('origenLng').value = '';
+    document.getElementById('destinoInput').value = '';
+    document.getElementById('destinoLat').value = '';
+    document.getElementById('destinoLng').value = '';
+    
+    // Recentrar en Ecuador
+    map.setCenter({ lat: -1.831239, lng: -78.183406 });
+    map.setZoom(7);
+}
+
+// Esperar a que el DOM y Google Maps estén listos
+window.addEventListener('load', function() {
+    console.log('🔄 Página cargada, esperando Google Maps...');
+    
+    // Verificar cada 100ms si Google Maps está listo
+    const checkGoogleMaps = setInterval(function() {
+        if (typeof google !== 'undefined' && google.maps && google.maps.places) {
+            clearInterval(checkGoogleMaps);
+            console.log('✅ Google Maps listo');
+            
+            // Inicializar cuando se abre el modal
+            const modal = document.getElementById('modalNuevoEnvio');
+            if (modal) {
+                modal.addEventListener('shown.bs.modal', function () {
+                    console.log('📂 Modal abierto, inicializando...');
+                    initMapAndAutocomplete();
+                });
+            }
+        }
+    }, 100);
+    
+    // Timeout de seguridad (10 segundos)
+    setTimeout(function() {
+        clearInterval(checkGoogleMaps);
+        if (typeof google === 'undefined') {
+            console.error('❌ Google Maps no se cargó en 10 segundos');
+        }
+    }, 10000);
+});
+</script>
+
+<!-- Google Maps API - Cargar al inicio -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBWy5uwBhRtafOG-EltQfe10KBp2R7eFTQ&libraries=places" defer></script>
+
+{% endblock %}

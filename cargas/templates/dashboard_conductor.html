@@ -1,0 +1,353 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Conductor - CargoTrack Pro 🇪🇨{% endblock %}
+
+{% block extra_css %}
+<style>
+    .conductor-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 40px;
+        border-radius: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: all 0.3s;
+        border-left: 4px solid;
+        height: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .stat-card.primary {
+        border-left-color: #667eea;
+    }
+    
+    .stat-card.success {
+        border-left-color: #10b981;
+    }
+    
+    .stat-card.warning {
+        border-left-color: #f59e0b;
+    }
+    
+    .stat-card.info {
+        border-left-color: #3b82f6;
+    }
+    
+    .stat-number {
+        font-size: 48px;
+        font-weight: 800;
+        line-height: 1;
+        margin-bottom: 10px;
+    }
+    
+    .stat-label {
+        font-size: 14px;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stat-icon {
+        font-size: 40px;
+        opacity: 0.2;
+        position: absolute;
+        right: 20px;
+        top: 20px;
+    }
+    
+    .envio-actual-card {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(245, 87, 108, 0.3);
+    }
+    
+    .vehiculo-card {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(79, 172, 254, 0.3);
+    }
+    
+    .envio-item {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-left: 4px solid #667eea;
+        transition: all 0.3s;
+    }
+    
+    .envio-item:hover {
+        transform: translateX(5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .action-btn {
+        padding: 12px 24px;
+        border-radius: 10px;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-gps {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+    
+    .btn-gps:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        color: white;
+    }
+    
+    .alert-item {
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+    
+    .badge-status {
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    
+    .badge-en-ruta {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+    
+    .badge-pendiente {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .badge-entregado {
+        background: #d1fae5;
+        color: #065f46;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid" style="padding: 30px;">
+    <!-- Header del Conductor -->
+    <div class="conductor-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 style="font-size: 36px; font-weight: 800; margin: 0;">
+                    <i class="bi bi-person-badge"></i> Bienvenido, {{ user.get_full_name }}
+                </h1>
+                <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 18px;">
+                    Panel de Control del Conductor
+                </p>
+            </div>
+            <div class="col-md-4 text-end">
+                <div style="font-size: 14px; opacity: 0.9;">
+                    <i class="bi bi-calendar"></i> {{ "now"|date:"d/m/Y" }}<br>
+                    <i class="bi bi-clock"></i> {{ "now"|date:"H:i" }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="row g-4 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card primary position-relative">
+                <i class="bi bi-truck stat-icon"></i>
+                <div class="stat-number" style="color: #667eea;">{{ envios_activos }}</div>
+                <div class="stat-label">En Ruta</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card warning position-relative">
+                <i class="bi bi-clock-history stat-icon"></i>
+                <div class="stat-number" style="color: #f59e0b;">{{ envios_pendientes }}</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card success position-relative">
+                <i class="bi bi-check-circle stat-icon"></i>
+                <div class="stat-number" style="color: #10b981;">{{ envios_completados }}</div>
+                <div class="stat-label">Completados</div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card info position-relative">
+                <i class="bi bi-box-seam stat-icon"></i>
+                <div class="stat-number" style="color: #3b82f6;">{{ total_envios }}</div>
+                <div class="stat-label">Total Envíos</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Columna Izquierda -->
+        <div class="col-lg-8">
+            <!-- Envío Actual -->
+            {% if envio_actual %}
+            <div class="envio-actual-card">
+                <h4 style="font-weight: 700; margin-bottom: 20px;">
+                    <i class="bi bi-geo-alt-fill"></i> Envío Actual en Ruta
+                </h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h3 style="font-weight: 800; margin-bottom: 15px;">{{ envio_actual.numero_guia }}</h3>
+                        <p style="margin: 8px 0; font-size: 16px;">
+                            <i class="bi bi-geo-alt"></i> <strong>Origen:</strong> {{ envio_actual.origen }}
+                        </p>
+                        <p style="margin: 8px 0; font-size: 16px;">
+                            <i class="bi bi-geo-alt-fill"></i> <strong>Destino:</strong> {{ envio_actual.destino }}
+                        </p>
+                        <p style="margin: 8px 0; font-size: 16px;">
+                            <i class="bi bi-person"></i> <strong>Cliente:</strong> {{ envio_actual.cliente.get_full_name }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        {% if ultimo_evento %}
+                        <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px;">
+                            <p style="margin: 0; font-size: 14px; opacity: 0.9;">Última ubicación:</p>
+                            <p style="margin: 5px 0; font-weight: 600;">{{ ultimo_evento.ubicacion }}</p>
+                            <p style="margin: 5px 0; font-size: 13px; opacity: 0.8;">
+                                {{ ultimo_evento.fecha|date:"d/m/Y H:i" }}
+                            </p>
+                        </div>
+                        {% endif %}
+                        <div style="margin-top: 15px;">
+                            <a href="{% url 'conductor_rastreo' %}" class="action-btn btn-gps w-100 text-center">
+                                <i class="bi bi-broadcast"></i> Iniciar Rastreo GPS
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div style="background: white; border-radius: 20px; padding: 40px; text-align: center; margin-bottom: 30px;">
+                <i class="bi bi-inbox" style="font-size: 64px; color: #cbd5e1;"></i>
+                <h4 style="margin-top: 20px; color: #64748b;">No tienes envíos activos en este momento</h4>
+                <p style="color: #94a3b8;">Espera a que te asignen un nuevo envío</p>
+            </div>
+            {% endif %}
+
+            <!-- Últimos Envíos -->
+            <div style="background: white; border-radius: 20px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+                <h5 style="font-weight: 700; margin-bottom: 20px;">
+                    <i class="bi bi-clock-history"></i> Historial de Envíos
+                </h5>
+                {% if ultimos_envios %}
+                    {% for envio in ultimos_envios %}
+                    <div class="envio-item">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 style="font-weight: 700; margin: 0;">{{ envio.numero_guia }}</h6>
+                                <p style="margin: 5px 0; color: #64748b; font-size: 14px;">
+                                    <i class="bi bi-geo-alt"></i> {{ envio.origen }} → {{ envio.destino }}
+                                </p>
+                                <p style="margin: 5px 0; color: #94a3b8; font-size: 13px;">
+                                    <i class="bi bi-calendar"></i> {{ envio.fecha_creacion|date:"d/m/Y H:i" }}
+                                </p>
+                            </div>
+                            <div class="text-end">
+                                {% if envio.estado == 'en_ruta' %}
+                                    <span class="badge-status badge-en-ruta">En Ruta</span>
+                                {% elif envio.estado == 'pendiente' %}
+                                    <span class="badge-status badge-pendiente">Pendiente</span>
+                                {% elif envio.estado == 'entregado' %}
+                                    <span class="badge-status badge-entregado">Entregado</span>
+                                {% endif %}
+                                <div style="margin-top: 10px;">
+                                    <a href="{% url 'envio_detalle' envio.id %}" class="btn btn-sm btn-outline-primary">
+                                        Ver Detalle
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="text-align: center; color: #94a3b8; padding: 20px;">No hay envíos registrados</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Columna Derecha -->
+        <div class="col-lg-4">
+            <!-- Vehículo Asignado -->
+            {% if vehiculo %}
+            <div class="vehiculo-card mb-4">
+                <h5 style="font-weight: 700; margin-bottom: 20px;">
+                    <i class="bi bi-truck-front"></i> Mi Vehículo
+                </h5>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <i class="bi bi-truck" style="font-size: 80px; opacity: 0.9;"></i>
+                </div>
+                <h3 style="font-weight: 800; text-align: center; margin-bottom: 15px;">{{ vehiculo.placa }}</h3>
+                <div style="background: rgba(255,255,255,0.2); padding: 15px; border-radius: 10px;">
+                    <p style="margin: 8px 0;"><strong>Marca:</strong> {{ vehiculo.marca }}</p>
+                    <p style="margin: 8px 0;"><strong>Modelo:</strong> {{ vehiculo.modelo }}</p>
+                    <p style="margin: 8px 0;"><strong>Año:</strong> {{ vehiculo.anio }}</p>
+                    <p style="margin: 8px 0;"><strong>Capacidad:</strong> {{ vehiculo.capacidad_kg }} kg</p>
+                </div>
+                <div style="margin-top: 15px;">
+                    <a href="{% url 'vehiculo_detalle' vehiculo.id %}" class="btn btn-light w-100">
+                        Ver Detalles
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Alertas -->
+            <div style="background: white; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
+                <h5 style="font-weight: 700; margin-bottom: 20px;">
+                    <i class="bi bi-exclamation-triangle"></i> Alertas Activas
+                </h5>
+                {% if alertas %}
+                    {% for alerta in alertas %}
+                    <div class="alert-item">
+                        <div style="font-weight: 600; margin-bottom: 5px;">{{ alerta.get_tipo_display }}</div>
+                        <div style="font-size: 13px; color: #92400e;">
+                            {{ alerta.descripcion|truncatewords:10 }}
+                        </div>
+                        <div style="font-size: 12px; color: #92400e; margin-top: 5px;">
+                            <i class="bi bi-clock"></i> {{ alerta.fecha|date:"d/m/Y H:i" }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 20px; color: #94a3b8;">
+                        <i class="bi bi-check-circle" style="font-size: 48px; opacity: 0.5;"></i>
+                        <p style="margin-top: 10px;">No hay alertas activas</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

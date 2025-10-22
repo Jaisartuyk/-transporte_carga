@@ -1,0 +1,89 @@
+# Python
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Cache
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node modules (si usas npm)
+node_modules/
+
+# Archivos de sistema
+Thumbs.db
+.DS_Store
+
+# Archivos temporales
+*.tmp
+*.bak
+*.swp
+*~
+
+# Migraciones (opcional, puedes incluirlas si quieres)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# Archivos de configuración local
+local_settings.py
+secrets.py
+
+# Archivos de base de datos
+*.sqlite3
+*.db
+
+# Archivos de logs
+*.log
+logs/
+
+# Archivos de backup
+*.backup
+*.old
