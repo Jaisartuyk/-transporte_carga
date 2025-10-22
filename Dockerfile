@@ -28,5 +28,9 @@ COPY . .
 # Recolectar archivos estáticos
 RUN python manage.py collectstatic --noinput
 
-# Comando de inicio con shell para expandir variables
-CMD ["sh", "-c", "daphne -b 0.0.0.0 -p ${PORT:-8000} core.asgi:application"]
+# Copiar y dar permisos al script de inicio
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
+
+# Comando de inicio usando el script
+CMD ["/app/start.sh"]
