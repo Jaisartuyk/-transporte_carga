@@ -3,6 +3,12 @@
 # Script de inicio para Railway con Gunicorn
 # Gunicorn es más estable que Daphne en Railway
 
+echo "Collecting static files..."
+python manage.py collectstatic --noinput
+
+echo "Running migrations..."
+python manage.py migrate --noinput
+
 echo "Starting Gunicorn with Uvicorn worker on port 8080..."
 
 # Iniciar Gunicorn con worker de Uvicorn (soporta WebSockets)

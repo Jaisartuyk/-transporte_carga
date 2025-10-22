@@ -25,11 +25,7 @@ RUN pip install --upgrade pip && \
 # Copiar proyecto
 COPY . .
 
-# Recolectar archivos estáticos
-RUN python manage.py collectstatic --noinput
-
-# Copiar y dar permisos al script de inicio
-COPY start.sh /app/start.sh
+# Dar permisos al script de inicio
 RUN chmod +x /app/start.sh
 
 # Comando de inicio usando el script
