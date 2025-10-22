@@ -47,6 +47,10 @@ venv.bak/
 .env
 .env.local
 .env.*.local
+VARIABLES_RAILWAY.txt
+*.txt
+!requirements.txt
+!runtime.txt
 
 # Cache
 __pycache__/
