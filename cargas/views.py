@@ -4,7 +4,7 @@ from .serializers import EnvioSerializer, EventoEnvioSerializer, AlertaSerialize
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, staff_member_required
 from .forms import ConductorForm, VehiculoForm, EnvioForm
 from django.db.models import Count
 from .models import Usuario, Envio, Vehiculo, Alerta
@@ -622,6 +622,39 @@ def editar_envio(request, envio_id):
     else:
         form = EnvioForm(instance=envio)
     return render(request, "envio_form.html", {"form": form, "envio": envio})
+
+
+@login_required
+@staff_member_required
+def panel_rastreo_general(request):
+    """Panel para que el admin vea todos los conductores en un mapa."""
+    # Obtener todos los envíos que están actualmente en ruta y tienen una ubicación válida
+    envios_en_ruta = Envio.objects.filter(
+        estado='en_ruta'
+    ).select_related('vehiculo', 'vehiculo__conductor').exclude(
+        ultima_latitud__isnull=True, 
+        ultima_longitud__isnull=True
+    )
+
+    # Preparar datos para JSON
+    envios_json = []
+    for envio in envios_en_ruta:
+        conductor = envio.vehiculo.conductor
+        envios_json.append({
+            'lat': float(envio.ultima_latitud),
+            'lng': float(envio.ultima_longitud),
+            'conductor': conductor.nombre_completo if conductor else 'Sin conductor',
+            'vehiculo': envio.vehiculo.placa,
+            'guia': envio.numero_guia,
+            'actualizacion': envio.ultima_actualizacion.strftime('%Y-%m-%d %H:%M')
+        })
+
+    context = {
+        'envios_en_ruta': envios_en_ruta,
+        'envios_json': envios_json,
+    }
+    
+    return render(request, "panel_rastreo_general.html", context)
 
 
 # Create your views here.

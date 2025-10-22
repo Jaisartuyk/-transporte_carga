@@ -24,6 +24,9 @@ urlpatterns = [
     path("conductores/<int:conductor_id>/", views.conductor_detalle, name="conductor_detalle"),
     path("conductores/<int:conductor_id>/editar/", views.editar_conductor, name="editar_conductor"),
 
+    # Panel de Admin
+    path("panel/rastreo/", views.panel_rastreo_general, name="panel_rastreo_general"),
+
     path("vehiculos/nuevo/", views.crear_vehiculo, name="crear_vehiculo"),
     path("vehiculos/<int:vehiculo_id>/", views.vehiculo_detalle, name="vehiculo_detalle"),
     path("vehiculos/<int:vehiculo_id>/editar/", views.editar_vehiculo, name="editar_vehiculo"),

@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Panel de Rastreo General{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-map-marked-alt me-2"></i>Panel de Rastreo General de Flota</h4>
+                </div>
+                <div class="card-body p-0">
+                    <div class="row g-0">
+                        <!-- Columna del Mapa -->
+                        <div class="col-lg-9">
+                            <div id="map" style="height: 75vh; width: 100%;"></div>
+                        </div>
+                        <!-- Columna de la Lista de Conductores -->
+                        <div class="col-lg-3 bg-light border-start" style="height: 75vh; overflow-y: auto;">
+                            <div class="p-3">
+                                <h5 class="border-bottom pb-2 mb-3">Conductores en Ruta ({{ envios_en_ruta.count }})</h5>
+                                <ul class="list-group list-group-flush">
+                                    {% for envio in envios_en_ruta %}
+                                        <li class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <p class="mb-0 fw-bold">{{ envio.vehiculo.conductor.nombre_completo|default:"Sin nombre" }}</p>
+                                                <small class="text-muted">{{ envio.vehiculo.placa }} - Guía: {{ envio.numero_guia }}</small>
+                                            </div>
+                                            <i class="fas fa-truck text-success"></i>
+                                        </li>
+                                    {% empty %}
+                                        <li class="list-group-item">No hay conductores en ruta actualmente.</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-muted text-center">
+                    <small>El mapa se actualizará automáticamente cada 30 segundos.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Datos de los envíos desde Django
+    const envios = {{ envios_json|safe }};
+    let map;
+    let markers = [];
+
+    function initMap() {
+        // Coordenadas para centrar el mapa inicialmente (ej. centro de Ecuador)
+        const initialCenter = { lat: -1.8312, lng: -78.1834 };
+
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 7,
+            center: initialCenter,
+            mapTypeId: 'terrain'
+        });
+
+        setMarkers(map);
+    }
+
+    function setMarkers(map) {
+        // Limpiar marcadores existentes
+        for (let i = 0; i < markers.length; i++) {
+            markers[i].setMap(null);
+        }
+        markers = [];
+
+        // Crear un InfoWindow reutilizable
+        const infowindow = new google.maps.InfoWindow();
+
+        // Crear marcadores para cada envío
+        envios.forEach(envio => {
+            const marker = new google.maps.Marker({
+                position: { lat: envio.lat, lng: envio.lng },
+                map: map,
+                title: `Conductor: ${envio.conductor}`,
+                icon: {
+                    url: "http://maps.google.com/mapfiles/ms/icons/green-dot.png"
+                }
+            });
+
+            // Contenido del InfoWindow
+            const contentString = 
+                `<div id="content" style="width: 250px;">` +
+                `<h6 id="firstHeading" class="firstHeading mb-1">${envio.conductor}</h6>` +
+                `<p class="mb-1"><b>Vehículo:</b> ${envio.vehiculo}</p>` +
+                `<p class="mb-1"><b>Guía:</b> ${envio.guia}</p>` +
+                `<p class="mb-0"><small><b>Última act:</b> ${envio.actualizacion}</small></p>` +
+                `</div>`;
+
+            marker.addListener("click", () => {
+                infowindow.setContent(contentString);
+                infowindow.open(map, marker);
+            });
+
+            markers.push(marker);
+        });
+    }
+
+    // Cargar el mapa
+    window.onload = function() {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&callback=initMap`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+    };
+
+    // Recargar la página cada 30 segundos para obtener nuevas ubicaciones
+    setTimeout(() => {
+        location.reload();
+    }, 30000);
+
+</script>
+{% endblock %}
