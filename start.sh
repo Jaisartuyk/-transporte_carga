@@ -1,9 +1,15 @@
 #!/bin/bash
 
-# Script de inicio para Railway
-# Usar puerto 8080 (asignado por Railway)
+# Script de inicio para Railway con Gunicorn
+# Gunicorn es más estable que Daphne en Railway
 
-echo "Starting Daphne server on port 8080..."
+echo "Starting Gunicorn with Uvicorn worker on port 8080..."
 
-# Iniciar Daphne en puerto 8080
-exec daphne -b 0.0.0.0 -p 8080 core.asgi:application
+# Iniciar Gunicorn con worker de Uvicorn (soporta WebSockets)
+exec gunicorn core.asgi:application \
+    --bind 0.0.0.0:8080 \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --workers 2 \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile -
