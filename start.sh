@@ -1,14 +1,17 @@
 #!/bin/bash
 
-# Script de inicio para Railway con Daphne
-
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
 echo "Running migrations..."
 python manage.py migrate --noinput
 
-echo "Starting Daphne server on port $PORT..."
+echo "Starting Gunicorn with Uvicorn worker on port $PORT..."
 
-# Iniciar Daphne
-exec daphne -b 0.0.0.0 -p $PORT core.asgi:application
+exec gunicorn core.asgi:application \
+    --bind 0.0.0.0:$PORT \
+    --worker-class uvicorn.workers.UvicornWorker \
+    --workers 2 \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile -
