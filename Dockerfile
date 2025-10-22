@@ -28,8 +28,5 @@ COPY . .
 # Recolectar archivos estáticos
 RUN python manage.py collectstatic --noinput
 
-# Exponer puerto
-EXPOSE $PORT
-
-# Comando de inicio
-CMD daphne -b 0.0.0.0 -p $PORT core.asgi:application
+# Comando de inicio con shell para expandir variables
+CMD ["sh", "-c", "daphne -b 0.0.0.0 -p ${PORT:-8000} core.asgi:application"]
