@@ -4,7 +4,8 @@ from .serializers import EnvioSerializer, EventoEnvioSerializer, AlertaSerialize
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.contrib.auth.decorators import login_required, staff_member_required
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.decorators import staff_member_required
 from .forms import ConductorForm, VehiculoForm, EnvioForm
 from django.db.models import Count
 from .models import Usuario, Envio, Vehiculo, Alerta
