@@ -338,7 +338,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBWy5uwBhRtafOG-EltQfe10KBp2R7eFTQ&libraries=places"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ GOOGLE_MAPS_API_KEY }}&libraries=places"></script>
 <!-- Background Location Tracker -->
 <script src="{% static 'js/background-location.js' %}"></script>
 <script>
