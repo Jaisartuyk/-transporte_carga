@@ -1,12 +1,9 @@
 #!/bin/bash
 
 # Script de inicio para Railway
-# Maneja la variable PORT correctamente
+# Usar puerto 8080 (asignado por Railway)
 
-# Obtener el puerto de Railway o usar 8000 por defecto
-PORT=${PORT:-8000}
+echo "Starting Daphne server on port 8080..."
 
-echo "Starting Daphne server on port $PORT..."
-
-# Iniciar Daphne
-exec daphne -b 0.0.0.0 -p $PORT core.asgi:application
+# Iniciar Daphne en puerto 8080
+exec daphne -b 0.0.0.0 -p 8080 core.asgi:application
