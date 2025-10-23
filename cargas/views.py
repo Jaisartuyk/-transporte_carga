@@ -5,7 +5,6 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
-from django.contrib.admin.decorators import staff_member_required
 from .forms import ConductorForm, VehiculoForm, EnvioForm
 from django.db.models import Count
 from .models import Usuario, Envio, Vehiculo, Alerta
@@ -626,9 +625,12 @@ def editar_envio(request, envio_id):
 
 
 @login_required
-@staff_member_required
 def panel_rastreo_general(request):
     """Panel para que el admin vea todos los conductores en un mapa."""
+    if not request.user.is_staff:
+        messages.error(request, "Acceso denegado. Solo para administradores.")
+        return redirect("dashboard")
+
     # Obtener todos los envíos que están actualmente en ruta y tienen una ubicación válida
     envios_en_ruta = Envio.objects.filter(
         estado='en_ruta'
