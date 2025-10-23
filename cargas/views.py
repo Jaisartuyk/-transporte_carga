@@ -631,27 +631,32 @@ def panel_rastreo_general(request):
         messages.error(request, "Acceso denegado. Solo para administradores.")
         return redirect("dashboard")
 
-    # Obtener todos los envíos que están actualmente en ruta y tienen una ubicación válida
+    # Obtener todos los envíos que están actualmente en ruta
     envios_en_ruta = Envio.objects.filter(
         estado='en_ruta'
-    ).select_related('vehiculo', 'vehiculo__conductor').exclude(
-        ultima_latitud__isnull=True, 
-        ultima_longitud__isnull=True
-    )
+    ).select_related('vehiculo', 'vehiculo__conductor')
 
     # Preparar datos para JSON
     envios_json = []
     for envio in envios_en_ruta:
-        if envio.vehiculo: # <-- AÑADIR ESTA COMPROBACIÓN
-            conductor = envio.vehiculo.conductor
-            envios_json.append({
-                'lat': float(envio.ultima_latitud),
-                'lng': float(envio.ultima_longitud),
-                'conductor': conductor.nombre_completo if conductor else 'Sin conductor',
-                'vehiculo': envio.vehiculo.placa,
-                'guia': envio.numero_guia,
-                'actualizacion': envio.ultima_actualizacion.strftime('%Y-%m-%d %H:%M') if envio.ultima_actualizacion else 'No disponible'
-            })
+        if envio.vehiculo:
+            # Obtener el último evento con ubicación
+            ultimo_evento = EventoEnvio.objects.filter(
+                envio=envio,
+                latitud__isnull=False,
+                longitud__isnull=False
+            ).order_by('-fecha_hora').first()
+            
+            if ultimo_evento:
+                conductor = envio.vehiculo.conductor
+                envios_json.append({
+                    'lat': float(ultimo_evento.latitud),
+                    'lng': float(ultimo_evento.longitud),
+                    'conductor': conductor.nombre_completo if conductor else 'Sin conductor',
+                    'vehiculo': envio.vehiculo.placa,
+                    'guia': envio.numero_guia,
+                    'actualizacion': ultimo_evento.fecha_hora.strftime('%Y-%m-%d %H:%M')
+                })
 
     context = {
         'envios_en_ruta': envios_en_ruta,
