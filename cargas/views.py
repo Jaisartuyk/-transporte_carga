@@ -645,7 +645,7 @@ def panel_rastreo_general(request):
                 envio=envio,
                 latitud__isnull=False,
                 longitud__isnull=False
-            ).order_by('-fecha_hora').first()
+            ).order_by('-fecha').first()
             
             if ultimo_evento:
                 conductor = envio.vehiculo.conductor
@@ -655,7 +655,7 @@ def panel_rastreo_general(request):
                     'conductor': conductor.nombre_completo if conductor else 'Sin conductor',
                     'vehiculo': envio.vehiculo.placa,
                     'guia': envio.numero_guia,
-                    'actualizacion': ultimo_evento.fecha_hora.strftime('%Y-%m-%d %H:%M')
+                    'actualizacion': ultimo_evento.fecha.strftime('%Y-%m-%d %H:%M')
                 })
 
     context = {
