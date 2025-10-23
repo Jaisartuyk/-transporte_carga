@@ -642,15 +642,16 @@ def panel_rastreo_general(request):
     # Preparar datos para JSON
     envios_json = []
     for envio in envios_en_ruta:
-        conductor = envio.vehiculo.conductor
-        envios_json.append({
-            'lat': float(envio.ultima_latitud),
-            'lng': float(envio.ultima_longitud),
-            'conductor': conductor.nombre_completo if conductor else 'Sin conductor',
-            'vehiculo': envio.vehiculo.placa,
-            'guia': envio.numero_guia,
-            'actualizacion': envio.ultima_actualizacion.strftime('%Y-%m-%d %H:%M')
-        })
+        if envio.vehiculo: # <-- AÑADIR ESTA COMPROBACIÓN
+            conductor = envio.vehiculo.conductor
+            envios_json.append({
+                'lat': float(envio.ultima_latitud),
+                'lng': float(envio.ultima_longitud),
+                'conductor': conductor.nombre_completo if conductor else 'Sin conductor',
+                'vehiculo': envio.vehiculo.placa,
+                'guia': envio.numero_guia,
+                'actualizacion': envio.ultima_actualizacion.strftime('%Y-%m-%d %H:%M')
+            })
 
     context = {
         'envios_en_ruta': envios_en_ruta,
