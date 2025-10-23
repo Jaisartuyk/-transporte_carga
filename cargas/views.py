@@ -650,7 +650,7 @@ def panel_rastreo_general(request):
                 'conductor': conductor.nombre_completo if conductor else 'Sin conductor',
                 'vehiculo': envio.vehiculo.placa,
                 'guia': envio.numero_guia,
-                'actualizacion': envio.ultima_actualizacion.strftime('%Y-%m-%d %H:%M')
+                'actualizacion': envio.ultima_actualizacion.strftime('%Y-%m-%d %H:%M') if envio.ultima_actualizacion else 'No disponible'
             })
 
     context = {
