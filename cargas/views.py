@@ -3,21 +3,23 @@ from .models import Envio, EventoEnvio, Alerta, Vehiculo
 from .serializers import EnvioSerializer, EventoEnvioSerializer, AlertaSerializer, VehiculoSerializer
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.contrib.auth import logout
-from django.contrib.auth.decorators import login_required
-from .forms import ConductorForm, VehiculoForm, EnvioForm
-from django.db.models import Count
-from .models import Usuario, Envio, Vehiculo, Alerta
-from django.utils.timezone import now
-from django.db.models.functions import TruncMonth
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Q, Max
+from django.utils import timezone
+from datetime import datetime, timedelta
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.utils.timezone import localtime
+from django.contrib.auth.decorators import permission_required
+import json
 
+from .models import Envio, Vehiculo, Conductor, Alerta, EventoEnvio, Usuario
 
-# ✅ Cerrar sesión
 def logout_view(request):
     logout(request)
     messages.success(request, "Has cerrado sesión exitosamente")
     return redirect('user_login')
-
 
 # ✅ Vista de login personalizada
 def user_login(request):
