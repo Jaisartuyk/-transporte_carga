@@ -634,39 +634,55 @@ def panel_rastreo_general(request):
         messages.error(request, "Acceso denegado. Solo para administradores.")
         return redirect("dashboard")
 
-    # Obtener todos los envíos que están actualmente en ruta
-    envios_en_ruta = Envio.objects.filter(
-        estado='en_ruta'
+    from django.utils.timezone import localtime, now
+    from datetime import timedelta
+    
+    # Obtener todos los envíos activos (en_ruta, pendiente, etc.)
+    # Excluir solo los entregados y cancelados
+    envios_activos = Envio.objects.exclude(
+        estado__in=['entregado', 'cancelado']
     ).select_related('vehiculo', 'vehiculo__conductor')
 
     # Preparar datos para JSON
     envios_json = []
-    for envio in envios_en_ruta:
-        if envio.vehiculo:
-            # Obtener el último evento con ubicación
+    conductores_vistos = set()  # Para evitar duplicados
+    
+    for envio in envios_activos:
+        if envio.vehiculo and envio.vehiculo.conductor:
+            conductor_id = envio.vehiculo.conductor.id
+            
+            # Evitar duplicar conductores si tienen múltiples envíos
+            if conductor_id in conductores_vistos:
+                continue
+            
+            # Obtener el último evento con ubicación (últimas 24 horas)
+            hace_24_horas = now() - timedelta(hours=24)
             ultimo_evento = EventoEnvio.objects.filter(
                 envio=envio,
                 latitud__isnull=False,
-                longitud__isnull=False
+                longitud__isnull=False,
+                fecha__gte=hace_24_horas
             ).order_by('-fecha').first()
             
             if ultimo_evento:
-                from django.utils.timezone import localtime
                 conductor = envio.vehiculo.conductor
                 fecha_local = localtime(ultimo_evento.fecha)
+                conductores_vistos.add(conductor_id)
                 
                 envios_json.append({
                     'lat': float(ultimo_evento.latitud),
                     'lng': float(ultimo_evento.longitud),
-                    'conductor': conductor.nombre_completo if conductor else 'Sin conductor',
+                    'conductor': conductor.nombre_completo,
                     'vehiculo': envio.vehiculo.placa,
                     'guia': envio.numero_guia,
-                    'actualizacion': fecha_local.strftime('%Y-%m-%d %H:%M')
+                    'estado': envio.get_estado_display(),
+                    'actualizacion': fecha_local.strftime('%Y-%m-%d %H:%M:%S')
                 })
 
     context = {
-        'envios_en_ruta': envios_en_ruta,
+        'envios_activos': envios_activos,
         'envios_json': envios_json,
+        'total_conductores': len(conductores_vistos),
     }
     
     return render(request, "panel_rastreo_general_v2.html", context)
@@ -677,26 +693,42 @@ def ubicaciones_activas_api(request):
     """API para obtener ubicaciones activas en tiempo real"""
     from django.http import JsonResponse
     from django.utils import timezone
+    from django.utils.timezone import localtime
+    from datetime import timedelta
     
     if not request.user.is_staff:
         return JsonResponse({'error': 'Acceso denegado'}, status=403)
     
     try:
-        envios_en_ruta = Envio.objects.filter(estado='en_ruta').select_related('vehiculo', 'vehiculo__conductor')
+        # Obtener todos los envíos activos (excluir entregados y cancelados)
+        envios_activos = Envio.objects.exclude(
+            estado__in=['entregado', 'cancelado']
+        ).select_related('vehiculo', 'vehiculo__conductor')
         
         ubicaciones = []
-        hoy = timezone.now().date()  # Usar timezone.now() para respetar zona horaria
+        hoy = timezone.now().date()
+        hace_24_horas = timezone.now() - timedelta(hours=24)
+        conductores_vistos = set()
         
-        for envio in envios_en_ruta:
-            if envio.vehiculo:
+        for envio in envios_activos:
+            if envio.vehiculo and envio.vehiculo.conductor:
+                conductor_id = envio.vehiculo.conductor.id
+                
+                # Evitar duplicar conductores
+                if conductor_id in conductores_vistos:
+                    continue
+                
+                # Obtener último evento de las últimas 24 horas
                 ultimo_evento = EventoEnvio.objects.filter(
                     envio=envio,
                     latitud__isnull=False,
-                    longitud__isnull=False
+                    longitud__isnull=False,
+                    fecha__gte=hace_24_horas
                 ).order_by('-fecha').first()
                 
                 if ultimo_evento:
                     conductor = envio.vehiculo.conductor
+                    conductores_vistos.add(conductor_id)
                     
                     # Contar actualizaciones del día
                     updates_count = EventoEnvio.objects.filter(
@@ -705,19 +737,19 @@ def ubicaciones_activas_api(request):
                         latitud__isnull=False
                     ).count()
                     
-                    # Convertir fecha a zona horaria local
-                    from django.utils.timezone import localtime
                     fecha_local = localtime(ultimo_evento.fecha)
                     
                     ubicaciones.append({
                         'envio_id': envio.id,
                         'lat': float(ultimo_evento.latitud),
                         'lng': float(ultimo_evento.longitud),
-                        'conductor': conductor.nombre_completo if conductor else 'Sin conductor',
+                        'conductor': conductor.nombre_completo,
                         'vehiculo': envio.vehiculo.placa,
                         'guia': envio.numero_guia,
+                        'estado': envio.get_estado_display(),
                         'speed': 0,  # TODO: calcular velocidad real
                         'actualizacion': fecha_local.strftime('%H:%M:%S'),
+                        'fecha_completa': fecha_local.strftime('%Y-%m-%d %H:%M:%S'),
                         'updates_count': updates_count
                     })
         
