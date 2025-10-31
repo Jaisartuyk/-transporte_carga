@@ -743,4 +743,39 @@ def envio_detalle(request, envio_id):
     return render(request, 'envio_detalle.html', context)
 
 
+@login_required
+def envio_ubicacion_actual_api(request, envio_id):
+    """API para obtener la ubicación actual de un envío en tiempo real"""
+    from django.http import JsonResponse
+    from django.utils.timezone import localtime
+    
+    try:
+        envio = get_object_or_404(Envio, id=envio_id)
+        
+        # Obtener el último evento GPS del envío
+        ultimo_evento = EventoEnvio.objects.filter(
+            envio=envio,
+            latitud__isnull=False,
+            longitud__isnull=False
+        ).order_by('-fecha').first()
+        
+        if ultimo_evento:
+            fecha_local = localtime(ultimo_evento.fecha)
+            
+            ubicacion = {
+                'lat': float(ultimo_evento.latitud),
+                'lng': float(ultimo_evento.longitud),
+                'fecha': fecha_local.isoformat(),
+                'ubicacion': ultimo_evento.ubicacion or '',
+                'conductor': envio.vehiculo.conductor.nombre_completo if envio.vehiculo and envio.vehiculo.conductor else 'Sin conductor'
+            }
+            
+            return JsonResponse({'ubicacion': ubicacion})
+        else:
+            return JsonResponse({'ubicacion': None, 'mensaje': 'No hay ubicaciones registradas'})
+            
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
 # Create your views here.

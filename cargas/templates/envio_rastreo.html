@@ -624,62 +624,50 @@
         map.controls[google.maps.ControlPosition.TOP_CENTER].push(centerControlDiv);
     }
     
-    // ✅ FUNCIONES WEBSOCKET PARA TIEMPO REAL
-    let socket = null;
-    let reconnectInterval = null;
+    // ✅ ACTUALIZACIÓN EN TIEMPO REAL CON POLLING
+    let ultimaActualizacion = null;
+    let pollingInterval = null;
+    const POLLING_INTERVAL = 10000; // 10 segundos
     
-    function conectarWebSocket() {
+    async function obtenerUbicacionActual() {
         const envioId = {{ envio.id }};
-        const wsScheme = window.location.protocol === 'https:' ? 'wss' : 'ws';
-        const wsUrl = `${wsScheme}://${window.location.host}/ws/tracking/${envioId}/`;
-        
-        console.log('🔌 Conectando WebSocket:', wsUrl);
         
         try {
-            socket = new WebSocket(wsUrl);
+            const response = await fetch(`/api/envio/${envioId}/ubicacion-actual/`);
+            const data = await response.json();
             
-            socket.onopen = function(e) {
-                console.log('✅ WebSocket conectado');
-                mostrarNotificacion('Conectado - Actualizaciones en tiempo real activas', 'success');
+            if (data.ubicacion) {
+                // Verificar si es una nueva ubicación
+                const nuevaFecha = new Date(data.ubicacion.fecha);
                 
-                // Limpiar intervalo de reconexión si existe
-                if (reconnectInterval) {
-                    clearInterval(reconnectInterval);
-                    reconnectInterval = null;
+                if (!ultimaActualizacion || nuevaFecha > ultimaActualizacion) {
+                    console.log('📍 Nueva ubicación recibida:', data.ubicacion);
+                    ultimaActualizacion = nuevaFecha;
+                    actualizarMapaEnTiempoReal(data.ubicacion);
                 }
-            };
-            
-            socket.onmessage = function(e) {
-                const data = JSON.parse(e.data);
-                console.log('📨 Mensaje recibido:', data);
-                
-                if (data.type === 'connection_established') {
-                    console.log('✅', data.message);
-                } else if (data.type === 'gps_update') {
-                    // Actualizar mapa en tiempo real
-                    actualizarMapaEnTiempoReal(data.data);
-                }
-            };
-            
-            socket.onclose = function(e) {
-                console.log('❌ WebSocket desconectado');
-                mostrarNotificacion('Desconectado - Intentando reconectar...', 'warning');
-                
-                // Intentar reconectar cada 5 segundos
-                if (!reconnectInterval) {
-                    reconnectInterval = setInterval(() => {
-                        console.log('🔄 Intentando reconectar...');
-                        conectarWebSocket();
-                    }, 5000);
-                }
-            };
-            
-            socket.onerror = function(error) {
-                console.error('❌ Error WebSocket:', error);
-            };
-            
+            }
         } catch (error) {
-            console.error('❌ Error al crear WebSocket:', error);
+            console.error('❌ Error al obtener ubicación:', error);
+        }
+    }
+    
+    function iniciarActualizacionTiempoReal() {
+        console.log('🔄 Iniciando actualización en tiempo real...');
+        
+        // Primera actualización inmediata
+        obtenerUbicacionActual();
+        
+        // Actualizar cada 10 segundos
+        pollingInterval = setInterval(obtenerUbicacionActual, POLLING_INTERVAL);
+        
+        mostrarNotificacion('Rastreo en tiempo real activado', 'success');
+    }
+    
+    function detenerActualizacionTiempoReal() {
+        if (pollingInterval) {
+            clearInterval(pollingInterval);
+            pollingInterval = null;
+            console.log('⏸️ Actualización en tiempo real detenida');
         }
     }
     
@@ -746,11 +734,14 @@
         }, 3000);
     }
     
-    // Cerrar WebSocket al salir
+    // Iniciar actualización en tiempo real cuando el mapa esté listo
+    google.maps.event.addListenerOnce(map, 'idle', function() {
+        iniciarActualizacionTiempoReal();
+    });
+    
+    // Detener polling al salir
     window.addEventListener('beforeunload', function() {
-        if (socket) {
-            socket.close();
-        }
+        detenerActualizacionTiempoReal();
     });
 </script>
 
