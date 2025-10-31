@@ -778,4 +778,22 @@ def envio_ubicacion_actual_api(request, envio_id):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+@login_required
+def vehiculos_list(request):
+    """Vista de lista de vehículos filtrada por rol"""
+    
+    # Si es conductor, solo mostrar SU vehículo
+    if request.user.rol == 'conductor':
+        vehiculos = Vehiculo.objects.filter(conductor=request.user)
+    else:
+        # Admin y otros roles ven todos los vehículos
+        vehiculos = Vehiculo.objects.all()
+    
+    context = {
+        'vehiculos': vehiculos,
+    }
+    
+    return render(request, 'vehiculos_list.html', context)
+
+
 # Create your views here.

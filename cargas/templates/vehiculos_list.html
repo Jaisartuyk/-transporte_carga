@@ -6,13 +6,15 @@
 <div class="page-header" data-aos="fade-down">
     <div class="d-flex justify-content-between align-items-center">
         <div>
-            <h1 class="page-title">Flota de Vehículos</h1>
-            <p class="page-subtitle">Administra todos los vehículos de la empresa</p>
+            <h1 class="page-title">{% if user.rol == 'conductor' %}Mi Vehículo{% else %}Flota de Vehículos{% endif %}</h1>
+            <p class="page-subtitle">{% if user.rol == 'conductor' %}Información de tu vehículo asignado{% else %}Administra todos los vehículos de la empresa{% endif %}</p>
         </div>
+        {% if user.rol != 'conductor' %}
         <button type="button" class="btn btn-modern btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoVehiculo">
             <i class="bi bi-plus-circle"></i>
             Nuevo Vehículo
         </button>
+        {% endif %}
     </div>
 </div>
 
@@ -116,9 +118,11 @@
                 <a href="{% url 'vehiculo_detalle' vehiculo.id %}" class="btn btn-sm btn-outline-primary flex-fill">
                     <i class="bi bi-eye"></i> Ver
                 </a>
+                {% if user.rol != 'conductor' %}
                 <a href="{% url 'editar_vehiculo' vehiculo.id %}" class="btn btn-sm btn-outline-secondary flex-fill">
                     <i class="bi bi-pencil"></i> Editar
                 </a>
+                {% endif %}
                 {% if vehiculo.estado == 'en_ruta' %}
                 <a href="{% url 'vehiculo_ubicacion' vehiculo.id %}" class="btn btn-sm btn-outline-success" title="Ver ubicación">
                     <i class="bi bi-geo-alt"></i>

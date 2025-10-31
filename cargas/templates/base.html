@@ -662,7 +662,8 @@
             <li class="menu-section">
                 <div class="menu-section-title">Gestión</div>
                 <ul>
-                    <!-- Envíos: Todos pueden ver -->
+                    <!-- Envíos: Solo Admin y Cliente (NO Conductor) -->
+                    {% if user.rol != 'conductor' %}
                     <li class="menu-item">
                         <a href="{% url 'envios_list' %}" class="menu-link {% if 'envio' in request.path %}active{% endif %}">
                             <i class="bi bi-box-seam"></i>
@@ -670,6 +671,7 @@
                             <span class="menu-badge">{{ envios_activos|default:0 }}</span>
                         </a>
                     </li>
+                    {% endif %}
                     
                     <!-- Vehículos: Solo Admin y Conductor -->
                     {% if user.rol == 'admin' or user.rol == 'conductor' %}
@@ -702,7 +704,8 @@
                     </li>
                     {% endif %}
                     
-                    <!-- Alertas: Todos pueden ver -->
+                    <!-- Alertas: Solo Admin y Cliente (NO Conductor) -->
+                    {% if user.rol != 'conductor' %}
                     <li class="menu-item">
                         <a href="{% url 'alertas_list' %}" class="menu-link {% if 'alerta' in request.path %}active{% endif %}">
                             <i class="bi bi-exclamation-triangle"></i>
@@ -710,6 +713,7 @@
                             <span class="menu-badge">{{ alertas_pendientes|default:0 }}</span>
                         </a>
                     </li>
+                    {% endif %}
                 </ul>
             </li>
 
