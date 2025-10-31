@@ -65,8 +65,8 @@ class GPSTracker {
         
         console.log('[GPS] Iniciando rastreo...');
         
-        // Conectar WebSocket
-        this.connectWebSocket();
+        // WebSocket deshabilitado - usando solo API REST
+        // this.connectWebSocket();
         
         // Opciones de geolocalización
         const options = {
@@ -228,15 +228,10 @@ class GPSTracker {
         }
     }
     
-    // Enviar ubicación al servidor
+    // Enviar ubicación al servidor (solo API REST, sin WebSocket)
     async sendLocation(coords) {
-        // Intentar enviar vía WebSocket primero
-        if (this.websocket && this.websocket.readyState === WebSocket.OPEN) {
-            this.sendLocationViaWebSocket(coords);
-        } else {
-            // Fallback: API REST
-            await this.sendLocationViaAPI(coords);
-        }
+        // Usar solo API REST (WebSocket deshabilitado temporalmente)
+        await this.sendLocationViaAPI(coords);
     }
     
     // Enviar vía WebSocket
@@ -256,22 +251,32 @@ class GPSTracker {
     // Enviar vía API REST
     async sendLocationViaAPI(coords) {
         try {
+            console.log('[GPS] 📤 Enviando ubicación vía API...', coords);
+            
+            const csrfToken = this.getCookie('csrftoken');
+            console.log('[GPS] 🔑 CSRF Token:', csrfToken ? 'Presente' : 'NO ENCONTRADO');
+            
             const response = await fetch('/api/ubicacion/', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': this.getCookie('csrftoken')
+                    'X-CSRFToken': csrfToken
                 },
                 body: JSON.stringify(coords)
             });
             
+            console.log('[GPS] 📡 Respuesta del servidor:', response.status, response.statusText);
+            
             if (response.ok) {
-                console.log('[GPS] Ubicación enviada vía API');
+                const data = await response.json();
+                console.log('[GPS] ✅ Ubicación enviada exitosamente:', data);
             } else {
-                throw new Error(`HTTP ${response.status}`);
+                const errorText = await response.text();
+                console.error('[GPS] ❌ Error del servidor:', response.status, errorText);
+                throw new Error(`HTTP ${response.status}: ${errorText}`);
             }
         } catch (error) {
-            console.error('[GPS] Error al enviar vía API:', error);
+            console.error('[GPS] ❌ Error al enviar vía API:', error);
             // Guardar en IndexedDB para sincronizar después
             await this.savePendingLocation(coords);
         }
