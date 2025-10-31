@@ -393,12 +393,11 @@
         infoWindow = new google.maps.InfoWindow();
         
         // 🎯 AUTO-INICIAR RASTREO (sin necesidad de clic)
-        {% if user.rol == 'conductor' %}
+        // Ejecutar siempre en esta vista (solo conductores acceden aquí)
         setTimeout(() => {
             console.log('[GPS] Auto-iniciando rastreo...');
             autoStartTracking();
         }, 1500);
-        {% endif %}
     });
     
     // 🎯 FUNCIÓN DE AUTO-INICIO
