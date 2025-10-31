@@ -667,15 +667,106 @@
 
     // 📋 ACTUALIZAR LISTA DE CONDUCTORES
     function updateDriversList(data) {
+        console.log('[UI] Actualizando lista de conductores con datos:', data);
+        
+        // Obtener el contenedor de la lista de conductores
+        const driversList = document.getElementById('drivers-list');
+        if (!driversList) {
+            console.error('[UI] No se encontró el contenedor de la lista de conductores');
+            return;
+        }
+
+        // Si no hay conductores, mostrar mensaje
+        if (data.length === 0) {
+            driversList.innerHTML = `
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-people fs-1 opacity-50"></i>
+                    <p class="mt-2 mb-0">No hay conductores activos</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Crear o actualizar tarjetas de conductores
         data.forEach(driver => {
-            const card = document.querySelector(`[data-envio-id="${driver.envio_id}"]`);
-            if (card) {
-                const timeSpan = card.querySelector('.update-time');
-                if (timeSpan) {
-                    timeSpan.textContent = driver.actualizacion;
+            const driverId = driver.envio_id.toString();
+            let card = document.querySelector(`[data-envio-id="${driverId}"]`);
+            
+            // Formatear la hora de actualización
+            const updateTime = driver.actualizacion || new Date().toLocaleTimeString('es-EC', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            // Si la tarjeta no existe, crearla
+            if (!card) {
+                card = document.createElement('div');
+                card.className = 'driver-card';
+                card.setAttribute('data-envio-id', driverId);
+                card.style.cursor = 'pointer';
+                card.onclick = () => focusDriver(driverId);
+                
+                card.innerHTML = `
+                    <div class="driver-card-content">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="driver-avatar me-3">
+                                <i class="bi bi-person-circle"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-0">${driver.conductor || 'Conductor'}</h6>
+                                <small class="text-muted">${driver.vehiculo || 'Sin vehículo'}</small>
+                            </div>
+                            <div class="badge bg-primary bg-opacity-10 text-primary">
+                                <i class="bi bi-clock me-1"></i>
+                                <span class="update-time">${updateTime}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-truck me-1"></i>
+                                ${driver.guia || 'N/A'}
+                            </span>
+                            <span class="badge bg-light text-dark">
+                                <i class="bi bi-speedometer2 me-1"></i>
+                                ${driver.speed || 0} km/h
+                            </span>
+                        </div>
+                    </div>
+                `;
+                
+                // Agregar la nueva tarjeta al inicio de la lista
+                driversList.prepend(card);
+                console.log(`[UI] Tarjeta creada para conductor ID: ${driverId}`);
+            } else {
+                // Actualizar tarjeta existente
+                const timeElement = card.querySelector('.update-time');
+                if (timeElement) {
+                    timeElement.textContent = updateTime;
                 }
+                
+                // Actualizar otros datos si es necesario
+                const speedElement = card.querySelector('.badge.bg-light:last-child');
+                if (speedElement) {
+                    speedElement.innerHTML = `<i class="bi bi-speedometer2 me-1"></i> ${driver.speed || 0} km/h`;
+                }
+                
+                console.log(`[UI] Tarjeta actualizada para conductor ID: ${driverId}`);
             }
         });
+        
+        // Ordenar tarjetas por hora de actualización (más recientes primero)
+        const cards = Array.from(document.querySelectorAll('.driver-card'));
+        cards.sort((a, b) => {
+            const timeA = a.querySelector('.update-time')?.textContent || '';
+            const timeB = b.querySelector('.update-time')?.textContent || '';
+            return timeB.localeCompare(timeA);
+        });
+        
+        // Reordenar las tarjetas en el DOM
+        cards.forEach(card => driversList.appendChild(card));
+        
+        console.log('[UI] Lista de conductores actualizada');
     }
 
     // ENFOCAR CONDUCTOR
