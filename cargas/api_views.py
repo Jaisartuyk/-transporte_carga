@@ -36,17 +36,23 @@ def recibir_ubicacion(request):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Obtener envío activo del conductor
+        # Obtener envío activo del conductor (en_ruta o pendiente)
         envio = Envio.objects.filter(
             vehiculo__conductor=request.user,
-            estado='en_ruta'
+            estado__in=['en_ruta', 'pendiente']
         ).first()
         
         if not envio:
-            return Response(
-                {'error': 'No tienes envíos activos'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            # Si no hay envío activo, buscar el último envío del conductor
+            envio = Envio.objects.filter(
+                vehiculo__conductor=request.user
+            ).order_by('-fecha_creacion').first()
+            
+            if not envio:
+                return Response(
+                    {'error': 'No tienes envíos registrados. Contacta al administrador.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
         
         # Crear evento de ubicación
         evento = EventoEnvio.objects.create(
@@ -115,17 +121,23 @@ def sincronizar_ubicaciones(request):
                 status=status.HTTP_403_FORBIDDEN
             )
         
-        # Obtener envío activo del conductor
+        # Obtener envío activo del conductor (en_ruta o pendiente)
         envio = Envio.objects.filter(
             vehiculo__conductor=request.user,
-            estado='en_ruta'
+            estado__in=['en_ruta', 'pendiente']
         ).first()
         
         if not envio:
-            return Response(
-                {'error': 'No tienes envíos activos'},
-                status=status.HTTP_404_NOT_FOUND
-            )
+            # Si no hay envío activo, buscar el último envío del conductor
+            envio = Envio.objects.filter(
+                vehiculo__conductor=request.user
+            ).order_by('-fecha_creacion').first()
+            
+            if not envio:
+                return Response(
+                    {'error': 'No tienes envíos registrados. Contacta al administrador.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
         
         # Crear eventos para cada ubicación
         eventos_creados = 0
