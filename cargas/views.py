@@ -655,13 +655,11 @@ def panel_rastreo_general(request):
             if conductor_id in conductores_vistos:
                 continue
             
-            # Obtener el último evento con ubicación (últimas 24 horas)
-            hace_24_horas = now() - timedelta(hours=24)
+            # Obtener el último evento con ubicación (sin límite de tiempo)
             ultimo_evento = EventoEnvio.objects.filter(
                 envio=envio,
                 latitud__isnull=False,
-                longitud__isnull=False,
-                fecha__gte=hace_24_horas
+                longitud__isnull=False
             ).order_by('-fecha').first()
             
             if ultimo_evento:
@@ -718,12 +716,11 @@ def ubicaciones_activas_api(request):
                 if conductor_id in conductores_vistos:
                     continue
                 
-                # Obtener último evento de las últimas 24 horas
+                # Obtener último evento (sin límite de tiempo)
                 ultimo_evento = EventoEnvio.objects.filter(
                     envio=envio,
                     latitud__isnull=False,
-                    longitud__isnull=False,
-                    fecha__gte=hace_24_horas
+                    longitud__isnull=False
                 ).order_by('-fecha').first()
                 
                 if ultimo_evento:
