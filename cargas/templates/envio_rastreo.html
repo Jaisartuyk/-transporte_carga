@@ -453,8 +453,11 @@
             mostrarMensajeSinDatos();
         }
         
-        // ✅ NUEVO: Conectar WebSocket para actualizaciones en tiempo real
-        conectarWebSocket();
+        // Iniciar actualización en tiempo real cuando el mapa esté listo
+        google.maps.event.addListenerOnce(map, 'idle', function() {
+            console.log('🗺️ Mapa listo, iniciando rastreo en tiempo real...');
+            iniciarActualizacionTiempoReal();
+        });
     });
     
     // Dibujar ruta completa
@@ -734,11 +737,6 @@
             setTimeout(() => notif.remove(), 300);
         }, 3000);
     }
-    
-    // Iniciar actualización en tiempo real cuando el mapa esté listo
-    google.maps.event.addListenerOnce(map, 'idle', function() {
-        iniciarActualizacionTiempoReal();
-    });
     
     // Detener polling al salir
     window.addEventListener('beforeunload', function() {
