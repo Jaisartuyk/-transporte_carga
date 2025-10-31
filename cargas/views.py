@@ -669,45 +669,52 @@ def panel_rastreo_general(request):
 @login_required
 def ubicaciones_activas_api(request):
     """API para obtener ubicaciones activas en tiempo real"""
+    from django.http import JsonResponse
+    from datetime import datetime
+    
     if not request.user.is_staff:
         return JsonResponse({'error': 'Acceso denegado'}, status=403)
     
-    envios_en_ruta = Envio.objects.filter(estado='en_ruta').select_related('vehiculo', 'vehiculo__conductor')
-    
-    ubicaciones = []
-    for envio in envios_en_ruta:
-        if envio.vehiculo:
-            ultimo_evento = EventoEnvio.objects.filter(
-                envio=envio,
-                latitud__isnull=False,
-                longitud__isnull=False
-            ).order_by('-fecha').first()
-            
-            if ultimo_evento:
-                conductor = envio.vehiculo.conductor
-                
-                # Contar actualizaciones del día
-                from datetime.datetime import datetime, timedelta
-                hoy = datetime.now().date()
-                updates_count = EventoEnvio.objects.filter(
+    try:
+        envios_en_ruta = Envio.objects.filter(estado='en_ruta').select_related('vehiculo', 'vehiculo__conductor')
+        
+        ubicaciones = []
+        hoy = datetime.now().date()
+        
+        for envio in envios_en_ruta:
+            if envio.vehiculo:
+                ultimo_evento = EventoEnvio.objects.filter(
                     envio=envio,
-                    fecha__date=hoy,
-                    latitud__isnull=False
-                ).count()
+                    latitud__isnull=False,
+                    longitud__isnull=False
+                ).order_by('-fecha').first()
                 
-                ubicaciones.append({
-                    'envio_id': envio.id,
-                    'lat': float(ultimo_evento.latitud),
-                    'lng': float(ultimo_evento.longitud),
-                    'conductor': conductor.nombre_completo if conductor else 'Sin conductor',
-                    'vehiculo': envio.vehiculo.placa,
-                    'guia': envio.numero_guia,
-                    'speed': 0,  # TODO: calcular velocidad real
-                    'actualizacion': ultimo_evento.fecha.strftime('%H:%M:%S'),
-                    'updates_count': updates_count
-                })
+                if ultimo_evento:
+                    conductor = envio.vehiculo.conductor
+                    
+                    # Contar actualizaciones del día
+                    updates_count = EventoEnvio.objects.filter(
+                        envio=envio,
+                        fecha__date=hoy,
+                        latitud__isnull=False
+                    ).count()
+                    
+                    ubicaciones.append({
+                        'envio_id': envio.id,
+                        'lat': float(ultimo_evento.latitud),
+                        'lng': float(ultimo_evento.longitud),
+                        'conductor': conductor.nombre_completo if conductor else 'Sin conductor',
+                        'vehiculo': envio.vehiculo.placa,
+                        'guia': envio.numero_guia,
+                        'speed': 0,  # TODO: calcular velocidad real
+                        'actualizacion': ultimo_evento.fecha.strftime('%H:%M:%S'),
+                        'updates_count': updates_count
+                    })
+        
+        return JsonResponse(ubicaciones, safe=False)
     
-    return JsonResponse(ubicaciones, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
 # Create your views here.
