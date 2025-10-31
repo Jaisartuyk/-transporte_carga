@@ -14,7 +14,7 @@ from django.utils.timezone import localtime
 from django.contrib.auth.decorators import permission_required
 import json
 
-from .models import Envio, Vehiculo, Conductor, Alerta, EventoEnvio, Usuario
+from .models import Envio, Vehiculo, Alerta, EventoEnvio, Usuario
 
 def logout_view(request):
     logout(request)
