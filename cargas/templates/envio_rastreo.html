@@ -606,22 +606,38 @@
         infoWindow.open(map, marker);
     }
     
-    // Mostrar mensaje cuando no hay datos
+    // Mostrar mensaje cuando no hay datos históricos (pero el rastreo en tiempo real está activo)
     function mostrarMensajeSinDatos() {
         const centerControlDiv = document.createElement('div');
+        centerControlDiv.id = 'mensaje-sin-datos';
         centerControlDiv.style.backgroundColor = 'white';
-        centerControlDiv.style.border = '2px solid #e2e8f0';
+        centerControlDiv.style.border = '2px solid #3b82f6';
         centerControlDiv.style.borderRadius = '16px';
-        centerControlDiv.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
-        centerControlDiv.style.cursor = 'pointer';
+        centerControlDiv.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.2)';
         centerControlDiv.style.marginTop = '10px';
-        centerControlDiv.style.padding = '20px';
+        centerControlDiv.style.padding = '24px';
         centerControlDiv.style.textAlign = 'center';
+        centerControlDiv.style.maxWidth = '400px';
         centerControlDiv.innerHTML = `
-            <div style="color: #64748b;">
-                <i class="bi bi-geo-alt" style="font-size: 48px; color: #cbd5e1;"></i>
-                <p style="margin: 12px 0 0 0; font-weight: 600;">Sin datos GPS</p>
-                <p style="margin: 4px 0 0 0; font-size: 13px;">El conductor debe iniciar el rastreo</p>
+            <div style="color: #1e293b;">
+                <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); 
+                            width: 64px; height: 64px; border-radius: 50%; 
+                            display: flex; align-items: center; justify-content: center;
+                            margin: 0 auto 16px auto;">
+                    <i class="bi bi-radar" style="font-size: 32px; color: white;"></i>
+                </div>
+                <p style="margin: 0 0 8px 0; font-weight: 700; font-size: 18px; color: #0f172a;">
+                    🔄 Rastreo en Tiempo Real Activo
+                </p>
+                <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b; line-height: 1.5;">
+                    Esperando la primera ubicación GPS del conductor...
+                </p>
+                <div style="background: #eff6ff; padding: 12px; border-radius: 8px; margin-top: 12px;">
+                    <p style="margin: 0; font-size: 13px; color: #1e40af;">
+                        <i class="bi bi-info-circle-fill"></i> 
+                        El mapa se actualizará automáticamente cuando el conductor envíe su ubicación
+                    </p>
+                </div>
             </div>
         `;
         
@@ -637,8 +653,11 @@
         const envioId = {{ envio.id }};
         
         try {
+            console.log(`🔍 Consultando ubicación para envío #${envioId}...`);
             const response = await fetch(`/api/envio/${envioId}/ubicacion-actual/`);
             const data = await response.json();
+            
+            console.log('📦 Respuesta de API:', data);
             
             if (data.ubicacion) {
                 // Verificar si es una nueva ubicación
@@ -648,7 +667,11 @@
                     console.log('📍 Nueva ubicación recibida:', data.ubicacion);
                     ultimaActualizacion = nuevaFecha;
                     actualizarMapaEnTiempoReal(data.ubicacion);
+                } else {
+                    console.log('⏭️ Ubicación ya procesada, esperando nueva...');
                 }
+            } else {
+                console.log('⚠️ No hay ubicación disponible:', data.mensaje || 'Sin mensaje');
             }
         } catch (error) {
             console.error('❌ Error al obtener ubicación:', error);
@@ -678,6 +701,12 @@
     function actualizarMapaEnTiempoReal(coords) {
         console.log('🗺️ Actualizando mapa con nueva ubicación:', coords);
         
+        // Eliminar mensaje de "sin datos" si existe
+        const mensajeSinDatos = document.getElementById('mensaje-sin-datos');
+        if (mensajeSinDatos) {
+            mensajeSinDatos.remove();
+        }
+        
         // Agregar punto a eventosGPS
         eventosGPS.push(coords);
         
@@ -703,8 +732,19 @@
         
         markers.push(newMarker);
         
-        // Actualizar polyline
-        if (pathPolyline) {
+        // Crear o actualizar polyline
+        if (!pathPolyline) {
+            // Crear polyline si no existe
+            pathPolyline = new google.maps.Polyline({
+                path: [{ lat: coords.lat, lng: coords.lng }],
+                geodesic: true,
+                strokeColor: '#667eea',
+                strokeOpacity: 0.8,
+                strokeWeight: 4,
+                map: map
+            });
+        } else {
+            // Actualizar polyline existente
             const path = pathPolyline.getPath();
             path.push(new google.maps.LatLng(coords.lat, coords.lng));
         }
@@ -714,7 +754,7 @@
         map.setZoom(15);
         
         // Mostrar notificación
-        mostrarNotificacion(`Nueva ubicación recibida de ${coords.conductor || 'conductor'}`, 'success');
+        mostrarNotificacion(`📍 Nueva ubicación recibida de ${coords.conductor || 'conductor'}`, 'success');
     }
     
     function mostrarNotificacion(mensaje, tipo = 'info') {
