@@ -546,12 +546,27 @@
 
     // 🚗 ACTUALIZAR MARCADORES
     function updateMarkers(data) {
+        console.log('[MAP] Actualizando marcadores con datos:', data);
+        
+        // Asegurarse de que markers y polylines estén inicializados
+        if (typeof markers === 'undefined') window.markers = {};
+        if (typeof polylines === 'undefined') window.polylines = {};
+
         // Limpiar marcadores antiguos
-        const currentIds = data.map(d => d.envio_id);
+        const currentIds = data.map(d => d.envio_id.toString()); // Convertir a string para comparación consistente
+        
         Object.keys(markers).forEach(id => {
-            if (!currentIds.includes(parseInt(id))) {
-                markers[id].setMap(null);
-                delete markers[id];
+            if (!currentIds.includes(id)) {
+                if (markers[id]) {
+                    markers[id].setMap(null);
+                    delete markers[id];
+                }
+            }
+        });
+
+        // Limpiar polylines antiguos
+        Object.keys(polylines).forEach(id => {
+            if (!currentIds.includes(id)) {
                 if (polylines[id]) {
                     polylines[id].setMap(null);
                     delete polylines[id];
@@ -561,23 +576,36 @@
 
         // Crear o actualizar marcadores
         data.forEach(driver => {
-            const position = { lat: driver.lat, lng: driver.lng };
+            const driverId = driver.envio_id.toString(); // Asegurar que el ID sea string
+            const position = { 
+                lat: parseFloat(driver.lat), 
+                lng: parseFloat(driver.lng) 
+            };
 
-            if (markers[driver.envio_id]) {
+            console.log(`[MAP] Procesando conductor ${driver.conductor} (ID: ${driverId}) en`, position);
+
+            if (markers[driverId]) {
                 // Actualizar posición existente
-                markers[driver.envio_id].setPosition(position);
+                console.log(`[MAP] Actualizando marcador existente para ID ${driverId}`);
+                markers[driverId].setPosition(position);
 
-                // Actualizar polyline
-                if (polylines[driver.envio_id]) {
-                    const path = polylines[driver.envio_id].getPath();
-                    path.push(new google.maps.LatLng(position.lat, position.lng));
+                // Actualizar polyline si existe
+                if (polylines[driverId]) {
+                    const path = polylines[driverId].getPath();
+                    path.push(new google.maps.LatLng(position));
+                    
+                    // Limitar el número de puntos en la ruta para mejorar rendimiento
+                    if (path.getLength() > 100) {
+                        path.removeAt(0);
+                    }
                 }
             } else {
                 // Crear nuevo marcador
+                console.log(`[MAP] Creando nuevo marcador para ID ${driverId}`);
                 const marker = new google.maps.Marker({
                     position: position,
                     map: map,
-                    title: driver.conductor,
+                    title: driver.conductor || 'Conductor',
                     icon: {
                         path: google.maps.SymbolPath.CIRCLE,
                         scale: 12,
@@ -594,15 +622,15 @@
                     const content = `
                         <div style="padding: 15px; min-width: 280px;">
                             <h6 style="font-weight: 700; color: #1e293b; margin-bottom: 12px;">
-                                <i class="bi bi-person-circle" style="color: #667eea;"></i> ${driver.conductor}
+                                <i class="bi bi-person-circle" style="color: #667eea;"></i> ${driver.conductor || 'N/A'}
                             </h6>
                             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
                                 <span style="color: #64748b;">Vehículo:</span>
-                                <span style="color: #0f172a; font-weight: 600;">${driver.vehiculo}</span>
+                                <span style="color: #0f172a; font-weight: 600;">${driver.vehiculo || 'N/A'}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
                                 <span style="color: #64748b;">Guía:</span>
-                                <span style="color: #0f172a; font-weight: 600;">${driver.guia}</span>
+                                <span style="color: #0f172a; font-weight: 600;">${driver.guia || 'N/A'}</span>
                             </div>
                             <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-size: 14px;">
                                 <span style="color: #64748b;">Velocidad:</span>
@@ -610,7 +638,7 @@
                             </div>
                             <div style="display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px;">
                                 <span style="color: #64748b;">Última actualización:</span>
-                                <span style="color: #0f172a; font-weight: 600;">${driver.actualizacion}</span>
+                                <span style="color: #0f172a; font-weight: 600;">${driver.actualizacion || 'N/A'}</span>
                             </div>
                         </div>
                     `;
@@ -618,10 +646,10 @@
                     infoWindow.open(map, marker);
                 });
 
-                markers[driver.envio_id] = marker;
+                markers[driverId] = marker;
 
                 // Crear polyline para la ruta
-                polylines[driver.envio_id] = new google.maps.Polyline({
+                polylines[driverId] = new google.maps.Polyline({
                     path: [position],
                     geodesic: true,
                     strokeColor: '#667eea',
@@ -629,8 +657,12 @@
                     strokeWeight: 3,
                     map: map
                 });
+                
+                console.log(`[MAP] Marcador creado para ID ${driverId} en`, position);
             }
         });
+        
+        console.log('[MAP] Actualización de marcadores completada');
     }
 
     // 📋 ACTUALIZAR LISTA DE CONDUCTORES
