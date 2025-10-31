@@ -1,32 +1,531 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Detalle Envío - CargoTrack Pro{% endblock %}
+{% block title %}Detalle Envío {{ envio.numero_guia }} - CargoTrack Pro 🇪🇨{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 40px;
+        color: white;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 40px rgba(102, 126, 234, 0.3);
+    }
+
+    .detail-header h1 {
+        font-size: 36px;
+        font-weight: 800;
+        margin-bottom: 10px;
+    }
+
+    .detail-header .subtitle {
+        font-size: 16px;
+        opacity: 0.9;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        margin-bottom: 20px;
+        transition: all 0.3s ease;
+    }
+
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .info-card h5 {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 3px solid #667eea;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: #64748b;
+        font-size: 14px;
+    }
+
+    .info-value {
+        font-weight: 500;
+        color: #0f172a;
+        font-size: 14px;
+        text-align: right;
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 40px;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 15px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+    }
+
+    .timeline-item::before {
+        content: '';
+        position: absolute;
+        left: -29px;
+        top: 5px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: white;
+        border: 3px solid #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+    }
+
+    .timeline-content {
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 15px;
+    }
+
+    .timeline-date {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .timeline-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 5px;
+    }
+
+    .timeline-description {
+        font-size: 13px;
+        color: #475569;
+    }
+
+    .status-badge-large {
+        display: inline-block;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .priority-badge-large {
+        display: inline-block;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .map-preview {
+        width: 100%;
+        height: 300px;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 14px;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .action-btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+    }
+
+    .action-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .action-btn-secondary {
+        background: white;
+        color: #667eea;
+        border: 2px solid #667eea;
+    }
+
+    .action-btn-secondary:hover {
+        background: #667eea;
+        color: white;
+    }
+
+    .contact-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .contact-name {
+        font-weight: 700;
+        color: #1e293b;
+        font-size: 16px;
+        margin-bottom: 8px;
+    }
+
+    .contact-info {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #475569;
+        margin-bottom: 5px;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="page-header" data-aos="fade-down">
-    <div class="d-flex justify-content-between align-items-center">
-        <div>
-            <h1 class="page-title">
-                <i class="bi bi-box-seam"></i> Envío {{ envio.numero_guia }}
+<!-- Header con estado -->
+<div class="detail-header" data-aos="fade-down">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <h1>
+                <i class="bi bi-box-seam"></i> {{ envio.numero_guia }}
             </h1>
-            <p class="page-subtitle">Información completa del envío</p>
+            <p class="subtitle mb-3">Información completa del envío</p>
+            
+            {% if envio.estado == 'en_ruta' %}
+                <span class="status-badge-large" style="background: #3b82f6; color: white;">
+                    <i class="bi bi-truck"></i> En Ruta
+                </span>
+            {% elif envio.estado == 'entregado' %}
+                <span class="status-badge-large" style="background: #10b981; color: white;">
+                    <i class="bi bi-check-circle-fill"></i> Entregado
+                </span>
+            {% elif envio.estado == 'pendiente' %}
+                <span class="status-badge-large" style="background: #fbbf24; color: white;">
+                    <i class="bi bi-clock-fill"></i> Pendiente
+                </span>
+            {% elif envio.estado == 'incidencia' %}
+                <span class="status-badge-large" style="background: #ef4444; color: white;">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Incidencia
+                </span>
+            {% endif %}
+
+            {% if envio.prioridad == 'urgente' %}
+                <span class="priority-badge-large ms-2" style="background: #fee2e2; color: #991b1b;">
+                    <i class="bi bi-lightning-fill"></i> Urgente
+                </span>
+            {% elif envio.prioridad == 'alta' %}
+                <span class="priority-badge-large ms-2" style="background: #fed7aa; color: #9a3412;">
+                    Alta
+                </span>
+            {% endif %}
         </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'rastrear_envio' envio.id %}" class="btn btn-modern btn-primary">
-                <i class="bi bi-geo-alt"></i> Rastrear
+        <div class="col-md-4 text-end">
+            <a href="{% url 'rastrear_envio' envio.id %}" class="action-btn action-btn-primary mb-2 d-inline-flex">
+                <i class="bi bi-geo-alt-fill"></i> Rastrear en Tiempo Real
             </a>
-            <a href="{% url 'envios_list' %}" class="btn btn-modern btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Volver
+            <a href="{% url 'editar_envio' envio.id %}" class="action-btn action-btn-secondary d-inline-flex">
+                <i class="bi bi-pencil-fill"></i> Editar Envío
             </a>
         </div>
     </div>
 </div>
 
-<div class="modern-card mb-4" data-aos="fade-up">
-    <h5>Estado: {{ envio.estado }}</h5>
-    <p>Cliente: {{ envio.cliente.nombre_completo }}</p>
-    <p>Origen: {{ envio.origen }}</p>
-    <p>Destino: {{ envio.destino }}</p>
-</div>
+<div class="row">
+    <!-- Columna Izquierda -->
+    <div class="col-lg-8">
+        <!-- Información General -->
+        <div class="info-card" data-aos="fade-up">
+            <h5>
+                <i class="bi bi-info-circle-fill text-primary"></i>
+                Información General
+            </h5>
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="bi bi-hash"></i> Número de Guía
+                </span>
+                <span class="info-value">{{ envio.numero_guia }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="bi bi-calendar"></i> Fecha de Creación
+                </span>
+                <span class="info-value">{{ envio.fecha_creacion|date:"d/m/Y H:i" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="bi bi-box"></i> Descripción de Carga
+                </span>
+                <span class="info-value">{{ envio.descripcion_carga }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="bi bi-rulers"></i> Peso
+                </span>
+                <span class="info-value">{{ envio.peso|default:"No especificado" }} kg</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="bi bi-cash-stack"></i> Costo
+                </span>
+                <span class="info-value">${{ envio.costo|default:"0.00" }}</span>
+            </div>
+        </div>
 
+        <!-- Ruta -->
+        <div class="info-card" data-aos="fade-up" data-aos-delay="100">
+            <h5>
+                <i class="bi bi-map-fill text-success"></i>
+                Ruta del Envío
+            </h5>
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="bi bi-geo-alt text-success"></i> Origen
+                </span>
+                <span class="info-value">{{ envio.origen }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="bi bi-geo-alt-fill text-danger"></i> Destino
+                </span>
+                <span class="info-value">{{ envio.destino }}</span>
+            </div>
+            {% if envio.paradas_intermedias %}
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="bi bi-signpost-2"></i> Paradas Intermedias
+                </span>
+                <span class="info-value">{{ envio.paradas_intermedias }}</span>
+            </div>
+            {% endif %}
+            <div class="info-row">
+                <span class="info-label">
+                    <i class="bi bi-calendar-check"></i> Fecha Estimada de Entrega
+                </span>
+                <span class="info-value">{{ envio.fecha_entrega_estimada|date:"d/m/Y"|default:"No especificada" }}</span>
+            </div>
+        </div>
+
+        <!-- Vehículo y Conductor -->
+        <div class="info-card" data-aos="fade-up" data-aos-delay="200">
+            <h5>
+                <i class="bi bi-truck-fill text-primary"></i>
+                Vehículo y Conductor
+            </h5>
+            {% if envio.vehiculo %}
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="bi bi-truck"></i> Vehículo
+                    </span>
+                    <span class="info-value">{{ envio.vehiculo.placa }} - {{ envio.vehiculo.marca }} {{ envio.vehiculo.modelo }}</span>
+                </div>
+                {% if envio.vehiculo.conductor %}
+                    <div class="info-row">
+                        <span class="info-label">
+                            <i class="bi bi-person-circle"></i> Conductor
+                        </span>
+                        <span class="info-value">{{ envio.vehiculo.conductor.nombre_completo }}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">
+                            <i class="bi bi-telephone"></i> Teléfono Conductor
+                        </span>
+                        <span class="info-value">
+                            <a href="tel:{{ envio.vehiculo.conductor.telefono }}" style="color: #667eea; text-decoration: none;">
+                                {{ envio.vehiculo.conductor.telefono }}
+                            </a>
+                        </span>
+                    </div>
+                {% else %}
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Sin conductor asignado
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-warning mb-0">
+                    <i class="bi bi-exclamation-triangle"></i> Sin vehículo asignado
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Historial de Eventos -->
+        <div class="info-card" data-aos="fade-up" data-aos-delay="300">
+            <h5>
+                <i class="bi bi-clock-history text-info"></i>
+                Historial de Eventos
+            </h5>
+            {% if eventos %}
+                <div class="timeline">
+                    {% for evento in eventos %}
+                    <div class="timeline-item">
+                        <div class="timeline-content">
+                            <div class="timeline-date">
+                                <i class="bi bi-calendar"></i> {{ evento.fecha|date:"d/m/Y H:i:s" }}
+                            </div>
+                            <div class="timeline-title">
+                                {% if evento.tipo == 'recogida' %}
+                                    <i class="bi bi-box-arrow-up text-primary"></i> Recogida
+                                {% elif evento.tipo == 'en_transito' %}
+                                    <i class="bi bi-truck text-info"></i> En Tránsito
+                                {% elif evento.tipo == 'entrega' %}
+                                    <i class="bi bi-check-circle text-success"></i> Entregado
+                                {% elif evento.tipo == 'incidencia' %}
+                                    <i class="bi bi-exclamation-triangle text-danger"></i> Incidencia
+                                {% else %}
+                                    <i class="bi bi-circle-fill"></i> {{ evento.get_tipo_display }}
+                                {% endif %}
+                            </div>
+                            {% if evento.descripcion %}
+                            <div class="timeline-description">
+                                {{ evento.descripcion }}
+                            </div>
+                            {% endif %}
+                            {% if evento.ubicacion %}
+                            <div class="timeline-description">
+                                <i class="bi bi-geo-alt"></i> {{ evento.ubicacion }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-muted text-center py-4">
+                    <i class="bi bi-inbox" style="font-size: 48px;"></i><br>
+                    No hay eventos registrados
+                </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Columna Derecha -->
+    <div class="col-lg-4">
+        <!-- Cliente -->
+        <div class="info-card" data-aos="fade-up">
+            <h5>
+                <i class="bi bi-person-fill text-primary"></i>
+                Cliente
+            </h5>
+            <div class="contact-card">
+                <div class="contact-name">
+                    <i class="bi bi-person-badge"></i> {{ envio.cliente.nombre_completo }}
+                </div>
+                <div class="contact-info">
+                    <i class="bi bi-telephone-fill"></i>
+                    <a href="tel:{{ envio.cliente.telefono }}" style="color: inherit; text-decoration: none;">
+                        {{ envio.cliente.telefono }}
+                    </a>
+                </div>
+                <div class="contact-info">
+                    <i class="bi bi-envelope-fill"></i>
+                    <a href="mailto:{{ envio.cliente.email }}" style="color: inherit; text-decoration: none;">
+                        {{ envio.cliente.email }}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contactos -->
+        <div class="info-card" data-aos="fade-up" data-aos-delay="100">
+            <h5>
+                <i class="bi bi-people-fill text-success"></i>
+                Contactos
+            </h5>
+            {% if envio.contacto_origen %}
+            <div class="mb-3">
+                <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Contacto Origen</strong>
+                <div class="contact-card">
+                    <div class="contact-name">{{ envio.contacto_origen }}</div>
+                    {% if envio.telefono_origen %}
+                    <div class="contact-info">
+                        <i class="bi bi-telephone-fill"></i>
+                        <a href="tel:{{ envio.telefono_origen }}" style="color: inherit; text-decoration: none;">
+                            {{ envio.telefono_origen }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if envio.contacto_destino %}
+            <div>
+                <strong style="color: #64748b; font-size: 12px; text-transform: uppercase;">Contacto Destino</strong>
+                <div class="contact-card">
+                    <div class="contact-name">{{ envio.contacto_destino }}</div>
+                    {% if envio.telefono_destino %}
+                    <div class="contact-info">
+                        <i class="bi bi-telephone-fill"></i>
+                        <a href="tel:{{ envio.telefono_destino }}" style="color: inherit; text-decoration: none;">
+                            {{ envio.telefono_destino }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            {% if not envio.contacto_origen and not envio.contacto_destino %}
+                <p class="text-muted text-center mb-0">
+                    <i class="bi bi-info-circle"></i> Sin contactos registrados
+                </p>
+            {% endif %}
+        </div>
+
+        <!-- Acciones Rápidas -->
+        <div class="info-card" data-aos="fade-up" data-aos-delay="200">
+            <h5>
+                <i class="bi bi-lightning-fill text-warning"></i>
+                Acciones Rápidas
+            </h5>
+            <div class="d-grid gap-2">
+                <a href="{% url 'rastrear_envio' envio.id %}" class="btn btn-primary">
+                    <i class="bi bi-geo-alt-fill"></i> Ver en Mapa
+                </a>
+                <a href="{% url 'editar_envio' envio.id %}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil-fill"></i> Editar Envío
+                </a>
+                <a href="{% url 'envios_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Volver a Lista
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

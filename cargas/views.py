@@ -727,4 +727,20 @@ def ubicaciones_activas_api(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
+@login_required
+def envio_detalle(request, envio_id):
+    """Vista de detalle completo de un envío"""
+    envio = get_object_or_404(Envio, id=envio_id)
+    
+    # Obtener eventos del envío ordenados por fecha descendente
+    eventos = EventoEnvio.objects.filter(envio=envio).order_by('-fecha')
+    
+    context = {
+        'envio': envio,
+        'eventos': eventos,
+    }
+    
+    return render(request, 'envio_detalle.html', context)
+
+
 # Create your views here.
