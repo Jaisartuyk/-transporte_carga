@@ -3,8 +3,10 @@ from .models import Envio, EventoEnvio, Alerta, Vehiculo
 from .serializers import EnvioSerializer, EventoEnvioSerializer, AlertaSerializer, VehiculoSerializer
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import Q, Max
+from django.db.models import Q, Max, Count
+from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from datetime import datetime, timedelta
 from django.http import JsonResponse, HttpResponse
