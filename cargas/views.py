@@ -825,4 +825,10 @@ def vehiculos_list(request):
     return render(request, 'vehiculos_list.html', context)
 
 
+@login_required
+def test_gps(request):
+    """Vista de prueba para GPS"""
+    return render(request, 'test_gps.html')
+
+
 # Create your views here.

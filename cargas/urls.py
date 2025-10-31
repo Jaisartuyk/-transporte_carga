@@ -45,4 +45,7 @@ urlpatterns = [
     path("api/ubicacion/sync/", api_views.sincronizar_ubicaciones, name="api_ubicacion_sync"),
     path("api/ubicaciones-activas/", views.ubicaciones_activas_api, name="ubicaciones_activas_api"),
     path("api/envio/<int:envio_id>/ubicacion-actual/", views.envio_ubicacion_actual_api, name="envio_ubicacion_actual_api"),
+    
+    # Test GPS
+    path("test-gps/", views.test_gps, name="test_gps"),
 ]
