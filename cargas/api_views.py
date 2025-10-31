@@ -57,12 +57,10 @@ def recibir_ubicacion(request):
             fecha=now()
         )
         
-        # Actualizar última ubicación del envío
-        envio.ultima_latitud = lat
-        envio.ultima_longitud = lng
-        envio.save(update_fields=['ultima_latitud', 'ultima_longitud'])
+        # No actualizamos campos que no existen en el modelo
+        # En su lugar, usamos el último evento de ubicación
         
-        # ✅ NUEVO: Enviar actualización por WebSocket
+        # Enviar actualización por WebSocket
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             f'tracking_{envio.id}',
@@ -145,12 +143,8 @@ def sincronizar_ubicaciones(request):
                 )
                 eventos_creados += 1
         
-        # Actualizar última ubicación del envío
-        if ubicaciones:
-            ultima = ubicaciones[-1]
-            envio.ultima_latitud = ultima.get('lat')
-            envio.ultima_longitud = ultima.get('lng')
-            envio.save(update_fields=['ultima_latitud', 'ultima_longitud'])
+        # No actualizamos campos que no existen en el modelo
+        # El último evento de ubicación se puede obtener con una consulta
         
         return Response({
             'success': True,
