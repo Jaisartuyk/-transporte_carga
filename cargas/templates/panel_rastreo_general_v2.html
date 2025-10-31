@@ -32,6 +32,7 @@
         font-size: 32px;
         font-weight: 800;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-clip: text;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 0;
@@ -418,28 +419,49 @@
     // 📍 CARGAR UBICACIONES
     async function loadLocations() {
         try {
+            console.log('[MONITOR] 🔄 Solicitando ubicaciones...');
             const response = await fetch('/api/ubicaciones-activas/');
+            
+            if (!response.ok) {
+                throw new Error(`Error HTTP: ${response.status}`);
+            }
+            
             const data = await response.json();
+            console.log(`[MONITOR] 📍 ${data.length} ubicaciones recibidas`);
 
-            console.log('[MONITOR] Ubicaciones recibidas:', data.length);
-
-            // Actualizar estadísticas
-            updateStats(data);
-
-            // Actualizar marcadores
-            updateMarkers(data);
-
-            // Actualizar lista de conductores
-            updateDriversList(data);
-
-            // Actualizar tiempo
-            document.getElementById('last-update-time').textContent = new Date().toLocaleTimeString('es-EC', {
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            if (data.length > 0) {
+                // Actualizar estadísticas
+                updateStats(data);
+                
+                // Actualizar marcadores
+                updateMarkers(data);
+                
+                // Actualizar lista de conductores
+                updateDriversList(data);
+                
+                // Mostrar última actualización
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('es-EC', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+                
+                document.getElementById('last-update-time').textContent = timeStr;
+                document.getElementById('last-update-time').classList.remove('text-danger');
+                
+                // Mostrar notificación de éxito
+                showNotification('Ubicaciones actualizadas', 'success');
+            } else {
+                console.warn('[MONITOR] No hay ubicaciones disponibles');
+                document.getElementById('last-update-time').classList.add('text-danger');
+                showNotification('No hay conductores activos', 'warning');
+            }
 
         } catch (error) {
-            console.error('[MONITOR] Error al cargar ubicaciones:', error);
+            console.error('[MONITOR] ❌ Error al cargar ubicaciones:', error);
+            document.getElementById('last-update-time').classList.add('text-danger');
+            showNotification('Error al cargar ubicaciones', 'danger');
         }
     }
 
@@ -557,7 +579,7 @@
         });
     }
 
-    // 🎯 ENFOCAR CONDUCTOR
+    // ENFOCAR CONDUCTOR
     function focusDriver(envioId) {
         // Remover selección anterior
         document.querySelectorAll('.driver-card').forEach(card => {
@@ -584,6 +606,13 @@
     document.addEventListener('DOMContentLoaded', function() {
         initMap();
         console.log('[MONITOR] Centro de monitoreo inicializado');
+        
+        // Cargar ubicaciones inmediatamente
+        loadLocations();
+        
+        // Actualizar cada 10 segundos
+        setInterval(loadLocations, 10000);
+        console.log('[MONITOR] Actualización automática activada (cada 10 segundos)');
     });
 </script>
 {% endblock %}

@@ -677,9 +677,13 @@ def panel_rastreo_general(request):
                     'actualizacion': fecha_local.strftime('%Y-%m-%d %H:%M:%S')
                 })
 
+    # Obtener solo los envíos en ruta para la lista lateral
+    envios_en_ruta = envios_activos.filter(estado='en_ruta')
+    
     context = {
         'envios_activos': envios_activos,
         'envios_json': envios_json,
+        'envios_en_ruta': envios_en_ruta,
         'total_conductores': len(conductores_vistos),
     }
     
