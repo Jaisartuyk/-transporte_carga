@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
-{# VERSION: 2025-10-31-AUTO-START-v3 #}
+{# VERSION: 2025-10-31-AUTO-START-v4-COORDS-FIX #}
 
 {% block title %}Rastreo GPS - Conductor{% endblock %}
 
@@ -555,7 +555,11 @@
     
     // Actualizar mapa
     function updateMap(coords) {
-        const latlng = { lat: coords.lat, lng: coords.lng };
+        // Normalizar coordenadas (GeolocationCoordinates usa latitude/longitude)
+        const latlng = { 
+            lat: coords.latitude || coords.lat, 
+            lng: coords.longitude || coords.lng 
+        };
         
         // Actualizar o crear marcador
         if (currentMarker) {
@@ -585,11 +589,11 @@
                         </h6>
                         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px;">
                             <span style="color: #64748b;">Latitud:</span>
-                            <span style="color: #0f172a; font-weight: 600;">${coords.lat.toFixed(6)}</span>
+                            <span style="color: #0f172a; font-weight: 600;">${latlng.lat.toFixed(6)}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px;">
                             <span style="color: #64748b;">Longitud:</span>
-                            <span style="color: #0f172a; font-weight: 600;">${coords.lng.toFixed(6)}</span>
+                            <span style="color: #0f172a; font-weight: 600;">${latlng.lng.toFixed(6)}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px;">
                             <span style="color: #64748b;">Precisión:</span>
@@ -611,7 +615,7 @@
         
         // Agregar punto al recorrido
         const path = pathPolyline.getPath();
-        path.push(latlng);
+        path.push(new google.maps.LatLng(latlng.lat, latlng.lng));
         
         // Centrar mapa
         map.setCenter(latlng);
