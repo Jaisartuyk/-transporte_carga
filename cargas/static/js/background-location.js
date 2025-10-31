@@ -219,16 +219,38 @@ class BackgroundLocationTracker {
     }
 
     /**
+     * Obtener CSRF token de las cookies
+     */
+    getCsrfToken() {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    cookieValue = decodeURIComponent(cookie.substring(10));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    /**
      * Enviar ubicación al servidor
      */
     async sendLocationToServer(envioId, coords) {
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        const csrfToken = this.getCsrfToken();
+
+        if (!csrfToken) {
+            console.warn('⚠️ CSRF token no encontrado');
+        }
 
         const response = await fetch('/api/ubicacion/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
+                'X-CSRFToken': csrfToken || ''
             },
             body: JSON.stringify({
                 envio_id: envioId,
@@ -242,7 +264,9 @@ class BackgroundLocationTracker {
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ Error del servidor:', errorText);
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
 
         console.log('✅ Ubicación enviada al servidor');

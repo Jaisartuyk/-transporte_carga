@@ -351,48 +351,7 @@
     
     // Inicializar mapa y rastreo en segundo plano
     document.addEventListener('DOMContentLoaded', async function() {
-        {% if envio_activo %}
-        // 🚀 ACTIVAR RASTREO EN SEGUNDO PLANO
-        try {
-            // Solicitar permiso de notificaciones
-            if ('Notification' in window && Notification.permission === 'default') {
-                const permission = await Notification.requestPermission();
-                console.log('📢 Permiso de notificaciones:', permission);
-            }
-            
-            // Iniciar rastreo en segundo plano
-            await window.backgroundTracker.startTracking({{ envio_activo.id }});
-            
-            console.log('✅ Rastreo en segundo plano activado');
-            
-            // Mostrar indicador visual
-            const statusDiv = document.getElementById('gps-status');
-            if (statusDiv) {
-                statusDiv.innerHTML = `
-                    <div class="alert alert-success" style="margin-top: 15px; border-radius: 12px;">
-                        <i class="bi bi-broadcast-pin"></i>
-                        <strong>Rastreo en Segundo Plano Activo</strong><br>
-                        <small>Tu ubicación se comparte automáticamente incluso con la app minimizada</small>
-                    </div>
-                `;
-            }
-            
-        } catch (error) {
-            console.error('❌ Error al iniciar rastreo en segundo plano:', error);
-            
-            // Mostrar error al usuario
-            const statusDiv = document.getElementById('gps-status');
-            if (statusDiv) {
-                statusDiv.innerHTML = `
-                    <div class="alert alert-warning" style="margin-top: 15px; border-radius: 12px;">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        <strong>Rastreo Limitado</strong><br>
-                        <small>${error.message}. Usa el botón "Iniciar Rastreo" para modo manual.</small>
-                    </div>
-                `;
-            }
-        }
-        {% endif %}
+        console.log('[INIT] Página cargada, inicializando...');
         // Crear mapa centrado en Ecuador
         map = new google.maps.Map(document.getElementById('map'), {
             center: { lat: -1.8312, lng: -78.1834 },
