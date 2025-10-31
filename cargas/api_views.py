@@ -13,6 +13,9 @@ def recibir_ubicacion(request):
     """
     API para recibir ubicaciones GPS de conductores
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
         # Obtener datos de la ubicación
         lat = request.data.get('lat')
@@ -22,8 +25,12 @@ def recibir_ubicacion(request):
         heading = request.data.get('heading')
         timestamp = request.data.get('timestamp')
         
+        logger.info(f"[GPS API] Recibiendo ubicación de usuario: {request.user.username} (rol: {request.user.rol})")
+        logger.info(f"[GPS API] Coordenadas: lat={lat}, lng={lng}")
+        
         # Validar datos requeridos
         if not lat or not lng:
+            logger.error("[GPS API] Faltan coordenadas")
             return Response(
                 {'error': 'Latitud y longitud son requeridos'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -31,30 +38,39 @@ def recibir_ubicacion(request):
         
         # Verificar que el usuario sea conductor
         if request.user.rol != 'conductor':
+            logger.error(f"[GPS API] Usuario {request.user.username} no es conductor")
             return Response(
                 {'error': 'Solo los conductores pueden enviar ubicaciones'},
                 status=status.HTTP_403_FORBIDDEN
             )
         
         # Obtener envío activo del conductor (en_ruta o pendiente)
+        logger.info(f"[GPS API] Buscando envíos para conductor: {request.user.username}")
         envio = Envio.objects.filter(
             vehiculo__conductor=request.user,
             estado__in=['en_ruta', 'pendiente']
         ).first()
         
         if not envio:
+            logger.warning(f"[GPS API] No se encontró envío activo para {request.user.username}")
             # Si no hay envío activo, buscar el último envío del conductor
             envio = Envio.objects.filter(
                 vehiculo__conductor=request.user
             ).order_by('-fecha_creacion').first()
             
             if not envio:
+                logger.error(f"[GPS API] No se encontró ningún envío para {request.user.username}")
                 return Response(
                     {'error': 'No tienes envíos registrados. Contacta al administrador.'},
                     status=status.HTTP_404_NOT_FOUND
                 )
+            else:
+                logger.info(f"[GPS API] Usando último envío: {envio.numero_guia} (estado: {envio.estado})")
+        else:
+            logger.info(f"[GPS API] Envío encontrado: {envio.numero_guia} (estado: {envio.estado})")
         
         # Crear evento de ubicación
+        logger.info(f"[GPS API] Creando evento de ubicación para envío {envio.numero_guia}")
         evento = EventoEnvio.objects.create(
             envio=envio,
             ubicacion=f"GPS: {lat}, {lng}",
@@ -85,6 +101,7 @@ def recibir_ubicacion(request):
             }
         )
         
+        logger.info(f"[GPS API] ✅ Ubicación guardada exitosamente. Evento ID: {evento.id}")
         return Response({
             'success': True,
             'message': 'Ubicación recibida y transmitida',
