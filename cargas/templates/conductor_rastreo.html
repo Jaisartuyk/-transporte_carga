@@ -411,16 +411,39 @@
         
         console.log('[GPS] Iniciando rastreo automático...');
         
-        // Iniciar rastreo automáticamente
-        const interval = 30000; // 30 segundos
-        const highAccuracy = true;
+        // Verificar si el navegador soporta geolocalización
+        if (!navigator.geolocation) {
+            console.error('[GPS] Geolocalización no soportada');
+            return;
+        }
         
-        gpsTracker = new BackgroundLocationTracker({
-            updateInterval: interval,
-            highAccuracy: highAccuracy,
-            onLocationUpdate: handleLocationUpdate,
-            onError: handleError
-        });
+        // Iniciar rastreo con watchPosition (nativo del navegador)
+        const options = {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+        };
+        
+        // Crear objeto gpsTracker simulado para compatibilidad
+        gpsTracker = {
+            watchId: null,
+            isActive: () => gpsTracker.watchId !== null,
+            start: function() {
+                this.watchId = navigator.geolocation.watchPosition(
+                    handleLocationUpdate,
+                    handleError,
+                    options
+                );
+                console.log('[GPS] WatchPosition iniciado:', this.watchId);
+            },
+            stop: function() {
+                if (this.watchId) {
+                    navigator.geolocation.clearWatch(this.watchId);
+                    this.watchId = null;
+                    console.log('[GPS] WatchPosition detenido');
+                }
+            }
+        };
         
         gpsTracker.start();
         
@@ -504,18 +527,21 @@
     }
     
     // Manejar actualización de ubicación
-    function handleLocationUpdate(coords) {
-        console.log('Nueva ubicación:', coords);
+    function handleLocationUpdate(position) {
+        console.log('Nueva ubicación:', position);
+        
+        // Extraer coords del objeto GeolocationPosition
+        const coords = position.coords || position;
         
         // Actualizar estadísticas
         document.getElementById('current-speed').textContent = coords.speed ? (coords.speed * 3.6).toFixed(1) + ' km/h' : '0 km/h';
         document.getElementById('current-accuracy').textContent = coords.accuracy ? coords.accuracy.toFixed(0) + ' m' : '- m';
-        document.getElementById('last-update').textContent = new Date(coords.timestamp).toLocaleTimeString();
+        document.getElementById('last-update').textContent = new Date(position.timestamp || Date.now()).toLocaleTimeString();
         
         locationsSent++;
         document.getElementById('locations-sent').textContent = locationsSent;
         
-        // Actualizar mapa
+        // Actualizar mapa con coords
         updateMap(coords);
         
         updateStatus('Ubicación actualizada', 'success');
