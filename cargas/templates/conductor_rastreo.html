@@ -450,6 +450,8 @@
             return;
         }
         
+        console.log('[GPS] Iniciando rastreo automático...');
+        
         // Iniciar rastreo automáticamente
         const interval = 30000; // 30 segundos
         const highAccuracy = true;
@@ -467,18 +469,28 @@
         localStorage.setItem('gps_tracking_active', 'true');
         localStorage.setItem('gps_tracking_start_time', new Date().toISOString());
         
-        // Actualizar UI
-        document.getElementById('start-btn').style.display = 'none';
-        document.getElementById('stop-btn').style.display = 'inline-block';
-        document.getElementById('gps-status').innerHTML = `
-            <div class="alert alert-success" style="margin-top: 15px; border-radius: 12px;">
-                <i class="bi bi-broadcast-pin"></i>
-                <strong>Rastreo Automático Activo</strong><br>
-                <small>Tu ubicación se comparte cada 30 segundos</small>
-            </div>
-        `;
+        // Actualizar UI con los IDs correctos
+        const startBtn = document.getElementById('btn-start-tracking');
+        const stopBtn = document.getElementById('btn-stop-tracking');
+        const statusDiv = document.getElementById('gps-status');
+        const statsContainer = document.getElementById('stats-container');
         
-        console.log('[GPS] Rastreo iniciado automáticamente');
+        if (startBtn) startBtn.style.display = 'none';
+        if (stopBtn) stopBtn.style.display = 'inline-block';
+        
+        if (statusDiv) {
+            statusDiv.className = 'gps-status-badge bg-success mb-4';
+            statusDiv.innerHTML = `
+                <i class="bi bi-broadcast-pin"></i>
+                <span>🟢 Rastreando Automáticamente</span>
+            `;
+        }
+        
+        if (statsContainer) {
+            statsContainer.style.display = 'block';
+        }
+        
+        console.log('[GPS] ✅ Rastreo iniciado automáticamente');
     }
     
     // 🔄 REACTIVAR AL VOLVER A LA APP
