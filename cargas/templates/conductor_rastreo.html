@@ -527,8 +527,8 @@
     }
     
     // Manejar actualización de ubicación
-    function handleLocationUpdate(position) {
-        console.log('Nueva ubicación:', position);
+    async function handleLocationUpdate(position) {
+        console.log('[GPS] Nueva ubicación:', position);
         
         // Extraer coords del objeto GeolocationPosition
         const coords = position.coords || position;
@@ -538,13 +538,66 @@
         document.getElementById('current-accuracy').textContent = coords.accuracy ? coords.accuracy.toFixed(0) + ' m' : '- m';
         document.getElementById('last-update').textContent = new Date(position.timestamp || Date.now()).toLocaleTimeString();
         
-        locationsSent++;
-        document.getElementById('locations-sent').textContent = locationsSent;
-        
         // Actualizar mapa con coords
         updateMap(coords);
         
-        updateStatus('Ubicación actualizada', 'success');
+        // 📤 ENVIAR UBICACIÓN AL SERVIDOR
+        try {
+            console.log('[GPS] 📤 Enviando ubicación al servidor...');
+            
+            const locationData = {
+                lat: coords.latitude,
+                lng: coords.longitude,
+                accuracy: coords.accuracy,
+                speed: coords.speed,
+                heading: coords.heading,
+                altitude: coords.altitude,
+                timestamp: new Date(position.timestamp || Date.now()).toISOString()
+            };
+            
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                             getCookie('csrftoken');
+            
+            const response = await fetch('/api/ubicacion/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(locationData)
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('[GPS] ✅ Ubicación enviada exitosamente:', data);
+                locationsSent++;
+                document.getElementById('locations-sent').textContent = locationsSent;
+                updateStatus('Ubicación enviada al servidor', 'success');
+            } else {
+                const errorText = await response.text();
+                console.error('[GPS] ❌ Error del servidor:', response.status, errorText);
+                updateStatus('Error al enviar ubicación: ' + response.status, 'error');
+            }
+        } catch (error) {
+            console.error('[GPS] ❌ Error al enviar ubicación:', error);
+            updateStatus('Error de conexión', 'error');
+        }
+    }
+    
+    // Función auxiliar para obtener cookie CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
     }
     
     // Manejar errores
