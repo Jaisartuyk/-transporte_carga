@@ -670,7 +670,7 @@ def panel_rastreo_general(request):
 def ubicaciones_activas_api(request):
     """API para obtener ubicaciones activas en tiempo real"""
     from django.http import JsonResponse
-    from datetime import datetime
+    from django.utils import timezone
     
     if not request.user.is_staff:
         return JsonResponse({'error': 'Acceso denegado'}, status=403)
@@ -679,7 +679,7 @@ def ubicaciones_activas_api(request):
         envios_en_ruta = Envio.objects.filter(estado='en_ruta').select_related('vehiculo', 'vehiculo__conductor')
         
         ubicaciones = []
-        hoy = datetime.now().date()
+        hoy = timezone.now().date()  # Usar timezone.now() para respetar zona horaria
         
         for envio in envios_en_ruta:
             if envio.vehiculo:

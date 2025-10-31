@@ -114,13 +114,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es-ec'  # Español de Ecuador
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Guayaquil'  # Zona horaria de Ecuador
 
-USE_I18N = True
+USE_I18N = True  # Habilitar internacionalización
 
-USE_TZ = True
+USE_TZ = True  # Usar zonas horarias (recomendado)
 
 
 # Static files (CSS, JavaScript, Images)
