@@ -416,6 +416,67 @@
         setInterval(loadLocations, UPDATE_INTERVAL);
     }
 
+    // 🔔 MOSTRAR NOTIFICACIÓN
+    function showNotification(message, type = 'info') {
+        // Si no hay soporte para Bootstrap Toast, usar alert nativo
+        if (typeof bootstrap === 'undefined' || !bootstrap.Toast) {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            return;
+        }
+
+        // Crear contenedor de notificaciones si no existe
+        let container = document.getElementById('notifications-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'notifications-container';
+            container.style.position = 'fixed';
+            container.style.top = '20px';
+            container.style.right = '20px';
+            container.style.zIndex = '9999';
+            document.body.appendChild(container);
+        }
+
+        // Crear toast
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.role = 'alert';
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('es-EC', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${timeStr}</strong> - ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Inicializar toast de Bootstrap
+        const bsToast = new bootstrap.Toast(toast, {
+            autohide: true,
+            delay: 5000
+        });
+        
+        // Eliminar el toast después de que se oculte
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+        
+        bsToast.show();
+    }
+
     // 📍 CARGAR UBICACIONES
     async function loadLocations() {
         try {
@@ -451,17 +512,23 @@
                 document.getElementById('last-update-time').classList.remove('text-danger');
                 
                 // Mostrar notificación de éxito
-                showNotification('Ubicaciones actualizadas', 'success');
+                if (typeof showNotification === 'function') {
+                    showNotification('Ubicaciones actualizadas', 'success');
+                }
             } else {
                 console.warn('[MONITOR] No hay ubicaciones disponibles');
                 document.getElementById('last-update-time').classList.add('text-danger');
-                showNotification('No hay conductores activos', 'warning');
+                if (typeof showNotification === 'function') {
+                    showNotification('No hay conductores activos', 'warning');
+                }
             }
 
         } catch (error) {
             console.error('[MONITOR] ❌ Error al cargar ubicaciones:', error);
             document.getElementById('last-update-time').classList.add('text-danger');
-            showNotification('Error al cargar ubicaciones', 'danger');
+            if (typeof showNotification === 'function') {
+                showNotification('Error al cargar ubicaciones', 'danger');
+            }
         }
     }
 
@@ -600,6 +667,67 @@
         }
 
         selectedDriver = envioId;
+    }
+
+    // 🔔 MOSTRAR NOTIFICACIÓN
+    function showNotification(message, type = 'info') {
+        // Si no hay soporte para Bootstrap Toast, usar alert nativo
+        if (typeof bootstrap === 'undefined' || !bootstrap.Toast) {
+            console.log(`[${type.toUpperCase()}] ${message}`);
+            return;
+        }
+
+        // Crear contenedor de notificaciones si no existe
+        let container = document.getElementById('notifications-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'notifications-container';
+            container.style.position = 'fixed';
+            container.style.top = '20px';
+            container.style.right = '20px';
+            container.style.zIndex = '9999';
+            document.body.appendChild(container);
+        }
+
+        // Crear toast
+        const toastId = 'toast-' + Date.now();
+        const toast = document.createElement('div');
+        toast.id = toastId;
+        toast.className = `toast align-items-center text-white bg-${type} border-0`;
+        toast.role = 'alert';
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('es-EC', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <strong>${timeStr}</strong> - ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+            </div>
+        `;
+        
+        container.appendChild(toast);
+        
+        // Inicializar toast de Bootstrap
+        const bsToast = new bootstrap.Toast(toast, {
+            autohide: true,
+            delay: 5000
+        });
+        
+        // Eliminar el toast después de que se oculte
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
+        
+        bsToast.show();
     }
 
     // 🚀 INICIALIZAR
