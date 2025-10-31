@@ -592,11 +592,14 @@ def rastrear_envio(request, envio_id):
     
     # Convertir eventos a JSON para el mapa
     eventos_json = []
+    from django.utils.timezone import localtime
+    
     for evento in eventos:
+        fecha_local = localtime(evento.fecha)
         eventos_json.append({
             'lat': float(evento.latitud),
             'lng': float(evento.longitud),
-            'fecha': evento.fecha.strftime('%Y-%m-%d %H:%M:%S'),
+            'fecha': fecha_local.strftime('%Y-%m-%d %H:%M:%S'),
             'ubicacion': evento.ubicacion or ''
         })
     
@@ -648,14 +651,17 @@ def panel_rastreo_general(request):
             ).order_by('-fecha').first()
             
             if ultimo_evento:
+                from django.utils.timezone import localtime
                 conductor = envio.vehiculo.conductor
+                fecha_local = localtime(ultimo_evento.fecha)
+                
                 envios_json.append({
                     'lat': float(ultimo_evento.latitud),
                     'lng': float(ultimo_evento.longitud),
                     'conductor': conductor.nombre_completo if conductor else 'Sin conductor',
                     'vehiculo': envio.vehiculo.placa,
                     'guia': envio.numero_guia,
-                    'actualizacion': ultimo_evento.fecha.strftime('%Y-%m-%d %H:%M')
+                    'actualizacion': fecha_local.strftime('%Y-%m-%d %H:%M')
                 })
 
     context = {
@@ -699,6 +705,10 @@ def ubicaciones_activas_api(request):
                         latitud__isnull=False
                     ).count()
                     
+                    # Convertir fecha a zona horaria local
+                    from django.utils.timezone import localtime
+                    fecha_local = localtime(ultimo_evento.fecha)
+                    
                     ubicaciones.append({
                         'envio_id': envio.id,
                         'lat': float(ultimo_evento.latitud),
@@ -707,7 +717,7 @@ def ubicaciones_activas_api(request):
                         'vehiculo': envio.vehiculo.placa,
                         'guia': envio.numero_guia,
                         'speed': 0,  # TODO: calcular velocidad real
-                        'actualizacion': ultimo_evento.fecha.strftime('%H:%M:%S'),
+                        'actualizacion': fecha_local.strftime('%H:%M:%S'),
                         'updates_count': updates_count
                     })
         
