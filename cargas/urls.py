@@ -43,4 +43,5 @@ urlpatterns = [
     # API para GPS Tracking
     path("api/ubicacion/", api_views.recibir_ubicacion, name="api_ubicacion"),
     path("api/ubicacion/sync/", api_views.sincronizar_ubicaciones, name="api_ubicacion_sync"),
+    path("api/ubicaciones-activas/", views.ubicaciones_activas_api, name="ubicaciones_activas_api"),
 ]
