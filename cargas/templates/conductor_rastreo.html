@@ -432,9 +432,71 @@
         
         // Inicializar InfoWindow
         infoWindow = new google.maps.InfoWindow();
+        
+        // 🎯 AUTO-INICIAR RASTREO (sin necesidad de clic)
+        {% if user.rol == 'conductor' %}
+        setTimeout(() => {
+            console.log('[GPS] Auto-iniciando rastreo...');
+            autoStartTracking();
+        }, 1500);
+        {% endif %}
     });
     
-    // Iniciar rastreo
+    // 🎯 FUNCIÓN DE AUTO-INICIO
+    function autoStartTracking() {
+        // Verificar si ya está rastreando
+        if (gpsTracker && gpsTracker.isActive && gpsTracker.isActive()) {
+            console.log('[GPS] Ya está rastreando');
+            return;
+        }
+        
+        // Iniciar rastreo automáticamente
+        const interval = 30000; // 30 segundos
+        const highAccuracy = true;
+        
+        gpsTracker = new BackgroundLocationTracker({
+            updateInterval: interval,
+            highAccuracy: highAccuracy,
+            onLocationUpdate: handleLocationUpdate,
+            onError: handleError
+        });
+        
+        gpsTracker.start();
+        
+        // Guardar estado
+        localStorage.setItem('gps_tracking_active', 'true');
+        localStorage.setItem('gps_tracking_start_time', new Date().toISOString());
+        
+        // Actualizar UI
+        document.getElementById('start-btn').style.display = 'none';
+        document.getElementById('stop-btn').style.display = 'inline-block';
+        document.getElementById('gps-status').innerHTML = `
+            <div class="alert alert-success" style="margin-top: 15px; border-radius: 12px;">
+                <i class="bi bi-broadcast-pin"></i>
+                <strong>Rastreo Automático Activo</strong><br>
+                <small>Tu ubicación se comparte cada 30 segundos</small>
+            </div>
+        `;
+        
+        console.log('[GPS] Rastreo iniciado automáticamente');
+    }
+    
+    // 🔄 REACTIVAR AL VOLVER A LA APP
+    document.addEventListener('visibilitychange', function() {
+        if (!document.hidden) {
+            console.log('[GPS] App visible de nuevo');
+            
+            // Verificar si debe estar rastreando
+            const shouldTrack = localStorage.getItem('gps_tracking_active') === 'true';
+            
+            if (shouldTrack && (!gpsTracker || !gpsTracker.isActive || !gpsTracker.isActive())) {
+                console.log('[GPS] Reactivando rastreo...');
+                autoStartTracking();
+            }
+        }
+    });
+    
+    // Iniciar rastreo (botón manual)
     function startTracking() {
         const interval = parseInt(document.getElementById('update-interval').value);
         const highAccuracy = document.getElementById('high-accuracy').checked;
@@ -604,20 +666,16 @@
         }
     }
     
-    // Detectar si la app se cierra
+    // 🎯 MANTENER RASTREO AL SALIR (SIN MENSAJE MOLESTO)
     window.addEventListener('beforeunload', function(e) {
-        // Detener rastreo en segundo plano
-        if (window.backgroundTracker && window.backgroundTracker.isTracking) {
-            window.backgroundTracker.stopTracking();
-            console.log('🛑 Rastreo en segundo plano detenido');
+        // NO detener el rastreo, solo guardar el estado
+        if (tracker && tracker.isTracking) {
+            localStorage.setItem('gps_tracking_active', 'true');
+            localStorage.setItem('gps_last_active', new Date().toISOString());
+            console.log('[GPS] Estado guardado para continuar en segundo plano');
         }
-        
-        // Detener rastreo manual
-        if (gpsTracker && gpsTracker.isActive()) {
-            e.preventDefault();
-            e.returnValue = '¿Estás seguro? El rastreo se detendrá.';
-            return e.returnValue;
-        }
+        // NO mostrar mensaje de confirmación
+        // NO usar e.preventDefault() ni e.returnValue
     });
 </script>
 {% endblock %}
