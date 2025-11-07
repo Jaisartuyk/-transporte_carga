@@ -1,0 +1,480 @@
+{% extends 'base.html' %}
+
+{% block title %}Embudo de Conversión - CargoTrack Pro{% endblock %}
+
+{% block content %}
+<div class="page-header" data-aos="fade-down">
+    <h1 class="page-title">
+        <i class="bi bi-funnel"></i> Embudo de Conversión
+    </h1>
+    <p class="page-subtitle">Análisis del flujo de envíos</p>
+</div>
+
+<!-- Tarjetas del Funnel -->
+<div class="row g-4 mb-4">
+    <!-- Leads Nuevos -->
+    <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="0">
+        <div class="funnel-card funnel-stage-1">
+            <div class="funnel-card-header">
+                <div class="funnel-icon">
+                    <i class="bi bi-person-plus-fill"></i>
+                </div>
+                <div class="funnel-badge cold-badge">COLD</div>
+            </div>
+            <div class="funnel-card-body">
+                <div class="funnel-title">Leads Nuevos</div>
+                <div class="funnel-count">{{ leads_nuevos }}</div>
+                <div class="funnel-description">Envíos pendientes de asignación</div>
+            </div>
+            <div class="funnel-card-footer">
+                <button class="funnel-action-btn" onclick="window.location.href='{% url 'envios_list' %}'">
+                    <i class="bi bi-phone"></i>
+                </button>
+                <button class="funnel-action-btn">
+                    <i class="bi bi-whatsapp"></i>
+                </button>
+                <button class="funnel-action-btn">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Precalificados -->
+    <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="100">
+        <div class="funnel-card funnel-stage-2">
+            <div class="funnel-card-header">
+                <div class="funnel-icon">
+                    <i class="bi bi-star-fill"></i>
+                </div>
+            </div>
+            <div class="funnel-card-body">
+                <div class="funnel-title">Precalificados</div>
+                <div class="funnel-count">{{ precalificados }}</div>
+                <div class="funnel-description">Envíos en ruta</div>
+                <div class="funnel-conversion">
+                    <div class="conversion-bar">
+                        <div class="conversion-fill" style="width: {{ tasa_precalificacion }}%"></div>
+                    </div>
+                    <span class="conversion-text">{{ tasa_precalificacion }}% de conversión</span>
+                </div>
+            </div>
+            <div class="funnel-card-footer">
+                <button class="funnel-action-btn" onclick="window.location.href='{% url 'panel_rastreo_general' %}'">
+                    <i class="bi bi-phone"></i>
+                </button>
+                <button class="funnel-action-btn">
+                    <i class="bi bi-whatsapp"></i>
+                </button>
+                <button class="funnel-action-btn">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contactados -->
+    <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="200">
+        <div class="funnel-card funnel-stage-3">
+            <div class="funnel-card-header">
+                <div class="funnel-icon">
+                    <i class="bi bi-phone-fill"></i>
+                </div>
+                <div class="funnel-badge warm-badge">WARM</div>
+            </div>
+            <div class="funnel-card-body">
+                <div class="funnel-title">Contactados</div>
+                <div class="funnel-count">{{ contactados }}</div>
+                <div class="funnel-description">Envíos entregados</div>
+                <div class="funnel-conversion">
+                    <div class="conversion-bar">
+                        <div class="conversion-fill" style="width: {{ tasa_contacto }}%"></div>
+                    </div>
+                    <span class="conversion-text">{{ tasa_contacto }}% de conversión</span>
+                </div>
+            </div>
+            <div class="funnel-card-footer">
+                <button class="funnel-action-btn">
+                    <i class="bi bi-phone"></i>
+                </button>
+                <button class="funnel-action-btn">
+                    <i class="bi bi-whatsapp"></i>
+                </button>
+                <button class="funnel-action-btn">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ganados -->
+    <div class="col-lg-3 col-md-6" data-aos="fade-up" data-aos-delay="300">
+        <div class="funnel-card funnel-stage-4">
+            <div class="funnel-card-header">
+                <div class="funnel-icon">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+            </div>
+            <div class="funnel-card-body">
+                <div class="funnel-title">Ganados</div>
+                <div class="funnel-count">{{ ganados }}</div>
+                <div class="funnel-description">Completados exitosamente</div>
+                <div class="funnel-conversion">
+                    <div class="conversion-bar">
+                        <div class="conversion-fill" style="width: {{ tasa_conversion }}%"></div>
+                    </div>
+                    <span class="conversion-text">{{ tasa_conversion }}% de conversión</span>
+                </div>
+            </div>
+            <div class="funnel-card-footer">
+                <button class="funnel-action-btn">
+                    <i class="bi bi-phone"></i>
+                </button>
+                <button class="funnel-action-btn">
+                    <i class="bi bi-whatsapp"></i>
+                </button>
+                <button class="funnel-action-btn">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Gráfico de Tendencias -->
+<div class="row g-4">
+    <div class="col-lg-12" data-aos="fade-up">
+        <div class="modern-card">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h5 class="mb-1" style="font-weight: 700;">Tendencias del Embudo</h5>
+                    <p class="text-muted mb-0" style="font-size: 14px;">Evolución mensual por etapa</p>
+                </div>
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-sm btn-outline-primary active">Todos</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary">6M</button>
+                    <button type="button" class="btn btn-sm btn-outline-primary">1A</button>
+                </div>
+            </div>
+            <canvas id="funnelTrendsChart" height="80"></canvas>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Estilos para las tarjetas del funnel */
+.funnel-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.funnel-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.funnel-stage-1 {
+    border-top: 4px solid #ef4444;
+}
+
+.funnel-stage-2 {
+    border-top: 4px solid #f59e0b;
+}
+
+.funnel-stage-3 {
+    border-top: 4px solid #10b981;
+}
+
+.funnel-stage-4 {
+    border-top: 4px solid #3b82f6;
+}
+
+.funnel-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.funnel-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.funnel-stage-1 .funnel-icon {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    color: #ef4444;
+}
+
+.funnel-stage-2 .funnel-icon {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #f59e0b;
+}
+
+.funnel-stage-3 .funnel-icon {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #10b981;
+}
+
+.funnel-stage-4 .funnel-icon {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #3b82f6;
+}
+
+.funnel-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.cold-badge {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.warm-badge {
+    background: #fed7aa;
+    color: #c2410c;
+}
+
+.funnel-card-body {
+    flex: 1;
+    margin-bottom: 16px;
+}
+
+.funnel-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.funnel-count {
+    font-size: 42px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 8px;
+    line-height: 1;
+}
+
+.funnel-description {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 16px;
+}
+
+.funnel-conversion {
+    margin-top: 16px;
+}
+
+.conversion-bar {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.conversion-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+    border-radius: 3px;
+    transition: width 1s ease;
+}
+
+.conversion-text {
+    font-size: 12px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.funnel-card-footer {
+    display: flex;
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.funnel-action-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 8px;
+    font-size: 18px;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.funnel-action-btn:hover {
+    background: #e2e8f0;
+    color: #3b82f6;
+    transform: translateY(-2px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .funnel-count {
+        font-size: 32px;
+    }
+    
+    .funnel-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 20px;
+    }
+}
+</style>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Gráfico de Tendencias del Embudo
+const funnelTrendsCtx = document.getElementById('funnelTrendsChart').getContext('2d');
+new Chart(funnelTrendsCtx, {
+    type: 'line',
+    data: {
+        labels: {{ meses|safe }},
+        datasets: [
+            {
+                label: 'Leads Nuevos',
+                data: {{ datos_nuevos|safe }},
+                borderColor: '#ef4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 6,
+                pointBackgroundColor: '#ef4444',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+            },
+            {
+                label: 'En Proceso',
+                data: {{ datos_proceso|safe }},
+                borderColor: '#f59e0b',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 6,
+                pointBackgroundColor: '#f59e0b',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+            },
+            {
+                label: 'Completados',
+                data: {{ datos_completados|safe }},
+                borderColor: '#10b981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderWidth: 3,
+                fill: true,
+                tension: 0.4,
+                pointRadius: 6,
+                pointBackgroundColor: '#10b981',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top',
+                labels: {
+                    usePointStyle: true,
+                    padding: 20,
+                    font: {
+                        size: 13,
+                        weight: '600'
+                    }
+                }
+            },
+            tooltip: {
+                backgroundColor: '#1e293b',
+                padding: 12,
+                borderRadius: 8,
+                titleColor: '#fff',
+                bodyColor: '#fff',
+                displayColors: true,
+                intersect: false,
+                mode: 'index'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                grid: {
+                    color: '#e2e8f0',
+                    drawBorder: false
+                },
+                ticks: {
+                    color: '#64748b',
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    color: '#64748b',
+                    font: {
+                        size: 12
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Animación de contadores
+function animateValue(element, start, end, duration) {
+    const range = end - start;
+    const increment = end > start ? 1 : -1;
+    const stepTime = Math.abs(Math.floor(duration / range));
+    let current = start;
+    
+    const timer = setInterval(function() {
+        current += increment;
+        element.textContent = current;
+        if (current == end) {
+            clearInterval(timer);
+        }
+    }, stepTime);
+}
+
+// Iniciar animaciones al cargar
+document.addEventListener('DOMContentLoaded', function() {
+    const counts = document.querySelectorAll('.funnel-count');
+    counts.forEach(count => {
+        const finalValue = parseInt(count.textContent);
+        count.textContent = '0';
+        animateValue(count, 0, finalValue, 1000);
+    });
+});
+</script>
+{% endblock %}

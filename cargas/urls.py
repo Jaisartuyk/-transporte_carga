@@ -48,4 +48,7 @@ urlpatterns = [
     
     # Test GPS
     path("test-gps/", views.test_gps, name="test_gps"),
+    
+    # Analytics
+    path("analytics/funnel/", views.analytics_funnel, name="analytics_funnel"),
 ]

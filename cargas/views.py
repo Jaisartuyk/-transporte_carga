@@ -840,4 +840,65 @@ def test_gps(request):
     return render(request, 'test_gps.html')
 
 
+@login_required
+def analytics_funnel(request):
+    """Vista de embudo de conversión de envíos"""
+    
+    # Calcular las etapas del funnel basado en estados de envíos
+    leads_nuevos = Envio.objects.filter(estado='pendiente').count()
+    precalificados = Envio.objects.filter(estado='en_ruta').count()
+    contactados = Envio.objects.filter(estado='entregado').count()
+    ganados = Envio.objects.filter(
+        estado='entregado',
+        fecha_entrega__isnull=False
+    ).count()
+    
+    # Calcular porcentajes de conversión
+    total = leads_nuevos + precalificados + contactados
+    
+    if total > 0:
+        tasa_precalificacion = round((precalificados / total) * 100, 1)
+        tasa_contacto = round((contactados / total) * 100, 1)
+        tasa_conversion = round((ganados / total) * 100, 1)
+    else:
+        tasa_precalificacion = 0
+        tasa_contacto = 0
+        tasa_conversion = 0
+    
+    # Envíos por mes para gráfico de tendencias
+    from django.db.models.functions import TruncMonth
+    envios_por_mes = (
+        Envio.objects
+        .annotate(mes=TruncMonth("fecha_creacion"))
+        .values("mes")
+        .annotate(
+            nuevos=Count("id", filter=Q(estado='pendiente')),
+            en_proceso=Count("id", filter=Q(estado='en_ruta')),
+            completados=Count("id", filter=Q(estado='entregado'))
+        )
+        .order_by("mes")
+    )
+    
+    meses = [e["mes"].strftime("%b %Y") if e["mes"] else "" for e in envios_por_mes]
+    datos_nuevos = [e["nuevos"] for e in envios_por_mes]
+    datos_proceso = [e["en_proceso"] for e in envios_por_mes]
+    datos_completados = [e["completados"] for e in envios_por_mes]
+    
+    context = {
+        'leads_nuevos': leads_nuevos,
+        'precalificados': precalificados,
+        'contactados': contactados,
+        'ganados': ganados,
+        'tasa_precalificacion': tasa_precalificacion,
+        'tasa_contacto': tasa_contacto,
+        'tasa_conversion': tasa_conversion,
+        'meses': meses,
+        'datos_nuevos': datos_nuevos,
+        'datos_proceso': datos_proceso,
+        'datos_completados': datos_completados,
+    }
+    
+    return render(request, 'analytics_funnel.html', context)
+
+
 # Create your views here.
