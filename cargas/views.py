@@ -17,6 +17,7 @@ from django.contrib.auth.decorators import permission_required
 import json
 
 from .models import Envio, Vehiculo, Alerta, EventoEnvio, Usuario
+from .forms import VehiculoForm, ConductorForm, EnvioForm
 
 def logout_view(request):
     logout(request)
@@ -379,7 +380,7 @@ def atender_alerta(request, alerta_id):
     if request.method == "POST":
         alerta.atendida = True
         alerta.atendida_por = request.user
-        alerta.fecha_atencion = now()
+        alerta.fecha_atencion = timezone.now()
         alerta.notas_atencion = request.POST.get('notas', '')
         alerta.save()
         
