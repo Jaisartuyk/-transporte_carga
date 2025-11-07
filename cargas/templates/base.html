@@ -718,21 +718,6 @@
             </li>
 
             <li class="menu-section">
-                <div class="menu-section-title">Analytics</div>
-                <ul>
-                    <!-- Analytics: Solo Admin -->
-                    {% if user.rol == 'admin' %}
-                    <li class="menu-item">
-                        <a href="{% url 'analytics_funnel' %}" class="menu-link {% if 'analytics' in request.path %}active{% endif %}">
-                            <i class="bi bi-funnel"></i>
-                            <span>Embudo</span>
-                        </a>
-                    </li>
-                    {% endif %}
-                </ul>
-            </li>
-
-            <li class="menu-section">
                 <div class="menu-section-title">Sistema</div>
                 <ul>
                     <!-- Administración: Solo Admin -->
